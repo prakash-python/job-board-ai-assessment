@@ -1,118 +1,87 @@
-/**
- * Navbar component — responsive top navigation bar.
- * Shows different links based on auth state and user role.
- */
-
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, logout, isAdmin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/signin');
     setMenuOpen(false);
   };
 
-  const isActive = (path, hash = '') => {
-    if (hash) return location.pathname === path && location.hash === hash;
-    return location.pathname === path && !location.hash;
+  const handleBrandClick = () => {
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setMenuOpen(false);
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="container navbar-inner">
         {/* Brand */}
-        <Link to="/" className="navbar-brand">
-          <span className="brand-icon">💼</span>
-          <span className="brand-text">JobBoard</span>
+        <Link to="/" className="navbar-brand" onClick={handleBrandClick}>
+          <div className="brand-logo-container">
+            <span className="brand-icon">💼</span>
+          </div>
+          <span className="brand-text">Hireloop</span>
         </Link>
 
         {/* Desktop Nav Links */}
         <ul className="navbar-links">
           <li>
-            <Link to="/#jobs" className={`nav-link ${isActive('/', '#jobs') ? 'active' : ''}`}>
-              Browse Jobs
-            </Link>
+            <NavLink to="/jobs" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Find Jobs
+            </NavLink>
           </li>
           <li>
-            <Link to="/#about" className={`nav-link ${isActive('/', '#about') ? 'active' : ''}`}>
-              About
-            </Link>
+            <NavLink to="/post-job" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              For Employers
+            </NavLink>
           </li>
           <li>
-            <Link to="/#contact" className={`nav-link ${isActive('/', '#contact') ? 'active' : ''}`}>
-              Contact
-            </Link>
+            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Dashboard
+            </NavLink>
           </li>
-          {user && isAdmin && (
-            <>
-              <li>
-                <Link to="/admin/jobs" className={`nav-link ${isActive('/admin/jobs') ? 'active' : ''}`}>
-                  Manage Jobs
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/applications" className={`nav-link ${isActive('/admin/applications') ? 'active' : ''}`}>
-                  Applications
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/users" className={`nav-link ${isActive('/admin/users') ? 'active' : ''}`}>
-                  Users
-                </Link>
-              </li>
-            </>
-          )}
-          {user && !isAdmin && (
-            <li>
-              <Link to="/my-applications" className={`nav-link ${isActive('/my-applications') ? 'active' : ''}`}>
-                My Applications
-              </Link>
-            </li>
-          )}
         </ul>
 
         {/* Auth Actions */}
         <div className="navbar-actions">
-          {user ? (
+          {!user ? (
+            <div className="auth-buttons">
+              <NavLink to="/signin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Sign in
+              </NavLink>
+              <Link to="/post-job" className="btn btn-primary btn-sm">Post a Job</Link>
+            </div>
+          ) : (
             <div className="user-menu">
-              <div className="user-avatar" title={user.name}>
-                {user.name?.charAt(0).toUpperCase()}
-              </div>
-              <div className="user-info">
-                <span className="user-name">{user.name}</span>
-                <span className={`user-role-badge ${isAdmin ? 'admin' : 'customer'}`}>
-                  {user.role}
-                </span>
+              <div className="user-avatar">
+                {user.username?.charAt(0).toUpperCase() || 'U'}
               </div>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">
                 Logout
               </button>
-            </div>
-          ) : (
-            <div className="auth-buttons">
-              <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
-              <Link to="/register" className="btn btn-primary btn-sm">Sign Up</Link>
+              <Link to="/post-job" className="btn btn-primary btn-sm hide-mobile">Post a Job</Link>
             </div>
           )}
-
-          <button 
-            className="theme-toggle-btn btn btn-ghost btn-sm" 
-            onClick={toggleTheme} 
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            style={{ fontSize: '1.2rem', padding: '0.4rem', marginLeft: '0.5rem' }}
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
 
           {/* Mobile hamburger */}
           <button
@@ -128,25 +97,17 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="mobile-menu">
-          <Link to="/#jobs" onClick={() => setMenuOpen(false)}>Browse Jobs</Link>
-          <Link to="/#about" onClick={() => setMenuOpen(false)}>About</Link>
-          <Link to="/#contact" onClick={() => setMenuOpen(false)}>Contact</Link>
-          {user && isAdmin && (
-            <>
-              <Link to="/admin/jobs" onClick={() => setMenuOpen(false)}>Manage Jobs</Link>
-              <Link to="/admin/applications" onClick={() => setMenuOpen(false)}>Applications</Link>
-              <Link to="/admin/users" onClick={() => setMenuOpen(false)}>Users</Link>
-            </>
-          )}
-          {user && !isAdmin && (
-            <Link to="/my-applications" onClick={() => setMenuOpen(false)}>My Applications</Link>
-          )}
+          <NavLink to="/jobs" onClick={() => setMenuOpen(false)}>Find Jobs</NavLink>
+          <NavLink to="/post-job" onClick={() => setMenuOpen(false)}>For Employers</NavLink>
+          <NavLink to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</NavLink>
           {user ? (
-            <button onClick={handleLogout} className="btn btn-danger btn-sm">Logout</button>
+            <>
+              <button onClick={handleLogout} className="btn btn-danger btn-sm">Logout</button>
+            </>
           ) : (
             <>
-              <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
-              <Link to="/register" onClick={() => setMenuOpen(false)}>Sign Up</Link>
+              <NavLink to="/signin" onClick={() => setMenuOpen(false)}>Sign in</NavLink>
+              <Link to="/post-job" className="btn btn-primary btn-sm" onClick={() => setMenuOpen(false)}>Post a Job</Link>
             </>
           )}
         </div>

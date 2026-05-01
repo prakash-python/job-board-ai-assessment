@@ -1,35 +1,35 @@
-/**
- * JobList Page — Browse all active job postings.
- */
-
 import { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { JOB_ENDPOINTS } from '../constants/apiConstants';
 import JobCard from '../components/JobCard';
 import './JobList.css';
 
-const JOB_TYPES = ['All', 'full-time', 'part-time', 'contract', 'remote', 'internship'];
+const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+const WORKPLACE_TYPES = ['Remote', 'Hybrid', 'Onsite'];
+const EXPERIENCE_LEVELS = ['Entry', 'Mid', 'Senior', 'Lead'];
+const SALARY_RANGES = [
+  { label: 'Any', value: 0 },
+  { label: '$50k+', value: 50000 },
+  { label: '$100k+', value: 100000 },
+  { label: '$150k+', value: 150000 },
+];
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Filter States
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedWorkplace, setSelectedWorkplace] = useState([]);
+  const [selectedSalary, setSelectedSalary] = useState(0);
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        let url = JOB_ENDPOINTS.LIST;
-        const params = new URLSearchParams();
-        if (locationFilter) params.append('location', locationFilter);
-        if (typeFilter) params.append('job_type', typeFilter);
-        // Note: Date filter isn't directly supported by backend yet, so we filter it in frontend below.
-        
-        const res = await axiosInstance.get(`${url}?${params.toString()}`);
+        const res = await axiosInstance.get(JOB_ENDPOINTS.LIST);
         setJobs(res.data);
         setFiltered(res.data);
       } catch {
@@ -39,140 +39,116 @@ const JobList = () => {
       }
     };
     fetchJobs();
-  }, [locationFilter, typeFilter]);
+  }, []);
 
-  // Filter jobs whenever search or date changes
   useEffect(() => {
     let result = jobs;
     if (search.trim()) {
       const q = search.toLowerCase();
-      result = result.filter(
-        (j) =>
-          j.title.toLowerCase().includes(q) ||
-          j.company.toLowerCase().includes(q) ||
-          j.location.toLowerCase().includes(q)
+      result = result.filter(j => 
+        j.title.toLowerCase().includes(q) || 
+        j.company.toLowerCase().includes(q)
       );
     }
-    
-    if (dateFilter) {
-      const today = new Date();
+    if (selectedTypes.length > 0) {
+      result = result.filter(j => selectedTypes.includes(j.job_type_display || j.job_type));
+    }
+    if (selectedSalary > 0) {
       result = result.filter(j => {
-        const jobDate = new Date(j.created_at);
-        const diffTime = today - jobDate;
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
-        
-        if (dateFilter === '1') return diffDays <= 1;
-        if (dateFilter === '7') return diffDays <= 7;
-        if (dateFilter === '30') return diffDays <= 30;
+        const matches = j.salary_range?.match(/(\d+)/g);
+        if (matches) {
+          const maxSalary = Math.max(...matches.map(m => parseInt(m) * 1000));
+          return maxSalary >= selectedSalary;
+        }
         return true;
       });
     }
-    
     setFiltered(result);
-  }, [search, jobs, dateFilter]);
+  }, [search, selectedTypes, selectedSalary, jobs]);
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner" />
-        <p>Loading jobs...</p>
-      </div>
-    );
-  }
+  const toggleFilter = (setFn, list, item) => {
+    if (list.includes(item)) {
+      setFn(list.filter(i => i !== item));
+    } else {
+      setFn([...list, item]);
+    }
+  };
 
   return (
-    <div className="page-wrapper">
+    <div className="jobs-page-container fade-in">
       <div className="container">
-        {/* Hero Section */}
-        <div className="jobs-hero fade-in-up">
-          <h1 className="jobs-hero-title">
-            Find Your <span className="text-gradient">Dream Job</span>
-          </h1>
-          <p className="jobs-hero-sub text-secondary">
-            {jobs.length} opportunities waiting for you
-          </p>
+        <div className="jobs-page-header">
+          <h1 className="page-title">Browse Jobs</h1>
+          <p className="results-count">{filtered.length} positions available</p>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="jobs-toolbar card fade-in-up fade-in-up-delay-1">
-          <div className="search-wrapper">
-            <span className="search-icon">🔍</span>
-            <input
-              id="job-search"
-              type="text"
-              className="search-input"
-              placeholder="Search by title, company, or location..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+        <div className="jobs-layout">
+          {/* Sidebar Filters */}
+          <aside className="jobs-sidebar">
+            <div className="filter-section">
+              <h3>Search</h3>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="Title, keyword..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="filter-section">
+              <h3>Job Type</h3>
+              <div className="checkbox-group">
+                {JOB_TYPES.map(type => (
+                  <label key={type} className="checkbox-item">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedTypes.includes(type)}
+                      onChange={() => toggleFilter(setSelectedTypes, selectedTypes, type)}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-section">
+              <h3>Salary Range</h3>
+              <div className="salary-pills">
+                {SALARY_RANGES.map(range => (
+                  <button 
+                    key={range.label}
+                    className={`salary-pill ${selectedSalary === range.value ? 'active' : ''}`}
+                    onClick={() => setSelectedSalary(range.value)}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="jobs-main">
+            {loading ? (
+              <div className="jobs-grid">
+                {[1, 2, 4, 5, 6].map(i => <div key={i} className="skeleton" style={{height: '320px', borderRadius: '20px'}}></div>)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="empty-results">
+                <span className="empty-icon">🔎</span>
+                <h3>No jobs found matching your criteria</h3>
+                <p>Try clearing your filters or searching for something else.</p>
+              </div>
+            ) : (
+              <div className="jobs-grid">
+                {filtered.map(job => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
             )}
-          </div>
-          <div className="type-filters" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <select 
-              className="form-input" 
-              style={{ width: 'auto' }} 
-              value={typeFilter} 
-              onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="">All Roles</option>
-              {JOB_TYPES.filter(t => t !== 'All').map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-
-            <select 
-              className="form-input" 
-              style={{ width: 'auto' }} 
-              value={locationFilter} 
-              onChange={(e) => setLocationFilter(e.target.value)}
-            >
-              <option value="">All Locations</option>
-              <option value="Remote">Remote</option>
-              <option value="New York">New York</option>
-              <option value="San Francisco">San Francisco</option>
-              <option value="London">London</option>
-              {/* Add more locations dynamically if needed */}
-            </select>
-
-            <select 
-              className="form-input" 
-              style={{ width: 'auto' }} 
-              value={dateFilter} 
-              onChange={(e) => setDateFilter(e.target.value)}
-            >
-              <option value="">Any Time</option>
-              <option value="1">Last 24 Hours</option>
-              <option value="7">Last 7 Days</option>
-              <option value="30">Last 30 Days</option>
-            </select>
-          </div>
+          </main>
         </div>
-
-        {/* Results count */}
-        <div className="results-info fade-in-up fade-in-up-delay-2">
-          <span className="text-muted text-sm">
-            Showing <strong>{filtered.length}</strong> of <strong>{jobs.length}</strong> jobs
-          </span>
-        </div>
-
-        {error && <div className="alert alert-error">{error}</div>}
-
-        {/* Job Grid */}
-        {filtered.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🔎</div>
-            <h3>No jobs found</h3>
-            <p>Try adjusting your search or filters.</p>
-          </div>
-        ) : (
-          <div className="grid-2">
-            {filtered.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

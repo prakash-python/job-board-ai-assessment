@@ -5,6 +5,7 @@ import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import SidebarLayout from './components/SidebarLayout';
+import Footer from './components/Footer';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -30,7 +31,7 @@ const App = () => {
 
   if (loading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0e1a' }}>
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-primary)' }}>
         <div className="spinner"></div>
       </div>
     );
@@ -47,8 +48,22 @@ const App = () => {
           <Route path="/jobs/:id" element={<JobDetail />} />
 
           {/* Auth Routes */}
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-          <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+          <Route path="/signin" element={user ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Register />} />
+          <Route path="/login" element={<Navigate to="/signin" replace />} />
+          <Route path="/register" element={<Navigate to="/signup" replace />} />
+
+          {/* Dashboard Shortcut */}
+          <Route path="/dashboard" element={
+            user ? (
+              user.role === 'admin' ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/customer/dashboard" replace />
+            ) : <Navigate to="/signin" replace />
+          } />
+
+          {/* Post Job (Admin/Employer only) */}
+          <Route path="/post-job" element={
+            user && user.role === 'admin' ? <AdminJobs /> : <Navigate to="/signin" replace />
+          } />
 
           {/* Customer Protected Routes with Sidebar */}
           <Route element={<ProtectedRoute requireCustomer={true} />}>
@@ -75,6 +90,7 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Footer />
     </>
   );
 };

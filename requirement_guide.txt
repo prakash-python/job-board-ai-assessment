@@ -1,0 +1,28 @@
+Thank you for your application.
+
+We would like to invite you to complete an assessment for the Software Engineer position. Please note that this role requires a night shift schedule and is strictly onsite at our Hitech City, Hyderabad office.
+
+Assessment Tasks:
+
+1. Build a job board using your favourite AI tool (We will be observing your approach to UX and features details)
+2. Push the code to GitHub.
+3. Write a CI/CD pipeline on GitHub using AI.
+4. Deploy the project to Vercel using the CI/CD pipeline.
+5. Write documentation using AI for all the features in the job board
+6. Submit the final links to us.
+
+Submission Requirements:
+
+Please provide the GitHub repository link, the Vercel demo link, and the AI-generated documentation.
+
+Please ensure all links provided are fully functional. Any broken links will result in immediate rejection.
+
+Deadline:
+
+All deliverables must be submitted within 3 days after receiving this email. Please note that submissions received after the deadline will not be considered.
+
+Next Steps:
+
+We will share the results this week. If your application is successful, you will receive a follow-up email. If you do not hear from us within this timeframe, we will not move forward with your candidacy at this stage; however, you are welcome to reapply after six months.
+
+If you have any questions or encounter any issues, please feel free to contact us. We wish you the best of luck and look forward to receiving your assessment.

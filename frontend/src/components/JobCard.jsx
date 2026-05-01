@@ -1,78 +1,39 @@
-/**
- * JobCard component — displays a job posting summary.
- */
 import { Link } from 'react-router-dom';
 import './JobCard.css';
 
-const JOB_TYPE_BADGE = {
-  'full-time':  'badge-success',
-  'part-time':  'badge-warning',
-  'contract':   'badge-accent',
-  'remote':     'badge-primary',
-  'internship': 'badge-gray',
-};
-
-const JOB_TYPE_ICON = {
-  'full-time':  '🏢',
-  'part-time':  '🕐',
-  'contract':   '📋',
-  'remote':     '🌐',
-  'internship': '🎓',
-};
-
 const JobCard = ({ job }) => {
-  const badgeClass = JOB_TYPE_BADGE[job.job_type] || 'badge-gray';
-  const icon = JOB_TYPE_ICON[job.job_type] || '💼';
-  const createdDate = new Date(job.created_at).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
-  });
+  const companyInitial = job.company ? job.company.charAt(0).toUpperCase() : 'J';
   
-  const deadlineDate = job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
-  }) : null;
+  // Calculate relative time
+  const daysAgo = Math.floor((new Date() - new Date(job.created_at)) / (1000 * 60 * 60 * 24));
+  let timeText = daysAgo === 0 ? 'Today' : `${daysAgo}d ago`;
 
   return (
-    <div className="job-card card fade-in-up">
+    <div className="job-card-premium fade-in">
       <div className="job-card-header">
-        <div className="job-company-logo">{icon}</div>
-        <div className="job-card-meta">
-          <span className={`badge ${badgeClass}`}>{job.job_type_display || job.job_type}</span>
-          {!job.is_active && <span className="badge badge-danger">Closed</span>}
+        <div className={`company-logo initial-${companyInitial.toLowerCase()}`}>
+          {companyInitial}
+        </div>
+        <span className="job-post-time">{timeText}</span>
+      </div>
+
+      <div className="job-card-body">
+        <h3 className="job-title">{job.title}</h3>
+        <p className="job-company">{job.company}</p>
+        
+        <div className="job-details-row">
+          <span className="detail-item">📍 {job.location}</span>
+          <span className="detail-item">💰 {job.salary_range || '$120k - $160k'}</span>
         </div>
       </div>
 
-      <h3 className="job-title">{job.title}</h3>
-      <p className="job-company">{job.company}</p>
-
-      <div className="job-card-info">
-        <span className="job-info-item">
-          <span className="info-icon">📍</span>
-          {job.location}
-        </span>
-        <span className="job-info-item">
-          <span className="info-icon">🗓</span>
-          Posted: {createdDate}
-        </span>
-        {deadlineDate && (
-          <span className="job-info-item text-danger">
-            <span className="info-icon">⌛</span>
-            Deadline: {deadlineDate}
-          </span>
-        )}
-      </div>
-
-      <p className="job-description-preview">
-        {job.description?.length > 120
-          ? job.description.substring(0, 120) + '...'
-          : job.description}
-      </p>
-
       <div className="job-card-footer">
-        <span className="posted-by text-xs text-muted">
-          By {job.created_by?.name || 'Admin'}
-        </span>
-        <Link to={`/jobs/${job.id}`} className="btn btn-primary btn-sm">
-          View Details →
+        <div className="job-tags">
+          <span className="job-tag blue">{job.job_type_display || job.job_type}</span>
+          <span className="job-tag cyan">Remote</span>
+        </div>
+        <Link to={`/jobs/${job.id}`} className="view-job-btn">
+          View Details
         </Link>
       </div>
     </div>

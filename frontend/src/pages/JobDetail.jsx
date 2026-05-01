@@ -1,22 +1,9 @@
-/**
- * JobDetail Page — Shows full details of a job posting.
- * Customers can navigate to Apply from here.
- */
-
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import { JOB_ENDPOINTS } from '../constants/apiConstants';
 import { useAuth } from '../context/AuthContext';
 import './JobDetail.css';
-
-const JOB_TYPE_BADGE = {
-  'full-time':  'badge-success',
-  'part-time':  'badge-warning',
-  'contract':   'badge-accent',
-  'remote':     'badge-primary',
-  'internship': 'badge-gray',
-};
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -55,133 +42,92 @@ const JobDetail = () => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner" />
-        <p>Loading job details...</p>
+      <div className="job-detail-container">
+        <div className="container">
+          <div className="skeleton" style={{height: '400px', borderRadius: '24px'}}></div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="page-wrapper">
+      <div className="job-detail-container">
         <div className="container">
           <div className="alert alert-error">{error}</div>
-          <Link to="/jobs" className="btn btn-outline">← Back to Jobs</Link>
+          <Link to="/jobs" className="btn btn-ghost mt-6">← Back to Jobs</Link>
         </div>
       </div>
     );
   }
 
-  const badgeClass = JOB_TYPE_BADGE[job.job_type] || 'badge-gray';
+  const companyInitial = job.company ? job.company.charAt(0).toUpperCase() : 'J';
   const createdDate = new Date(job.created_at).toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    month: 'long', day: 'numeric', year: 'numeric'
   });
 
   return (
-    <div className="page-wrapper">
+    <div className="job-detail-container fade-in">
       <div className="container">
         <div className="job-detail-layout">
-
           {/* Main Content */}
-          <div className="job-detail-main fade-in-up">
-            <Link to="/jobs" className="back-link">← Back to Jobs</Link>
-
-            <div className="card job-detail-card">
-              {/* Header */}
-              <div className="job-detail-header">
-                <div className="job-detail-logo">💼</div>
-                <div className="job-detail-title-group">
-                  <div className="job-detail-badges">
-                    <span className={`badge ${badgeClass}`}>{job.job_type_display || job.job_type}</span>
-                    {!job.is_active && <span className="badge badge-danger">Closed</span>}
-                  </div>
-                  <h1 className="job-detail-title">{job.title}</h1>
-                  <p className="job-detail-company">{job.company}</p>
-                </div>
+          <div className="job-detail-main">
+            <Link to="/jobs" className="nav-link" style={{marginBottom: '20px', display: 'inline-block'}}>← Back to all jobs</Link>
+            
+            <div className="job-header-card">
+              <div className="company-badge">{companyInitial}</div>
+              <h1 className="detail-title">{job.title}</h1>
+              <div className="detail-meta">
+                <span>🏢 {job.company}</span>
+                <span>📍 {job.location}</span>
+                <span>📅 {createdDate}</span>
               </div>
+            </div>
 
-              {/* Meta Info */}
-              <div className="job-detail-meta">
-                <div className="meta-item">
-                  <span className="meta-icon">📍</span>
-                  <div>
-                    <span className="meta-label">Location</span>
-                    <span className="meta-value">{job.location}</span>
-                  </div>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-icon">🗓</span>
-                  <div>
-                    <span className="meta-label">Posted On</span>
-                    <span className="meta-value">{createdDate}</span>
-                  </div>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-icon">👤</span>
-                  <div>
-                    <span className="meta-label">Posted By</span>
-                    <span className="meta-value">{job.created_by?.name || 'Admin'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="divider" />
-
-              {/* Description */}
-              <div className="job-description">
-                <h2>Job Description</h2>
-                <p>{job.description}</p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="job-detail-actions">
-                {user && !isAdmin && job.is_active && (
-                  <Link to={`/jobs/${id}/apply`} className="btn btn-primary btn-lg">
-                    Apply Now →
-                  </Link>
-                )}
-                {!user && (
-                  <Link to="/login" className="btn btn-primary btn-lg">
-                    Login to Apply
-                  </Link>
-                )}
-                {isAdmin && (
-                  <div className="admin-actions">
-                    <Link to={`/admin/jobs/${id}/edit`} className="btn btn-outline">
-                      ✏️ Edit Job
-                    </Link>
-                    <button
-                      className="btn btn-danger"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                    >
-                      {deleting ? 'Deleting...' : '🗑 Delete Job'}
-                    </button>
-                  </div>
-                )}
+            <div className="description-card">
+              <h2>Role Description</h2>
+              <div className="description-content">
+                {job.description}
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
-          <div className="job-detail-sidebar fade-in-up fade-in-up-delay-1">
-            <div className="card sidebar-card">
-              <h3>Quick Summary</h3>
-              <ul className="summary-list">
-                <li><strong>Company:</strong> {job.company}</li>
-                <li><strong>Location:</strong> {job.location}</li>
-                <li><strong>Job Type:</strong> {job.job_type_display || job.job_type}</li>
-                <li><strong>Status:</strong> {job.is_active ? '🟢 Active' : '🔴 Closed'}</li>
-              </ul>
-              {user && !isAdmin && job.is_active && (
-                <Link to={`/jobs/${id}/apply`} className="btn btn-primary btn-full" style={{ marginTop: '1rem' }}>
-                  Apply Now
+          <aside className="job-detail-sidebar">
+            <div className="detail-sidebar-card">
+              <div className="sidebar-info-group">
+                <span className="sidebar-label">Salary Range</span>
+                <span className="sidebar-value">{job.salary_range || '$120k - $160k'}</span>
+              </div>
+              <div className="sidebar-info-group">
+                <span className="sidebar-label">Job Type</span>
+                <span className="sidebar-value">{job.job_type_display || job.job_type}</span>
+              </div>
+              <div className="sidebar-info-group">
+                <span className="sidebar-label">Workplace</span>
+                <span className="sidebar-value">Remote</span>
+              </div>
+
+              {user && !isAdmin && (
+                <Link to={`/jobs/${id}/apply`} className="btn btn-primary apply-btn-large">
+                  Apply for this role
                 </Link>
               )}
+              {!user && (
+                <Link to="/login" className="btn btn-primary apply-btn-large">
+                  Sign in to apply
+                </Link>
+              )}
+              {isAdmin && (
+                <div style={{marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                   <Link to={`/admin/jobs/${id}/edit`} className="btn btn-ghost" style={{width: '100%'}}>Edit Job</Link>
+                   <button onClick={handleDelete} className="btn btn-ghost" style={{width: '100%', color: '#ef4444'}} disabled={deleting}>
+                     {deleting ? 'Deleting...' : 'Delete Job'}
+                   </button>
+                </div>
+              )}
             </div>
-          </div>
-
+          </aside>
         </div>
       </div>
     </div>
