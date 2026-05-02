@@ -37,6 +37,11 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Skip interceptor for login requests to allow the Login page to handle errors locally
+      if (originalRequest.url.includes('/login/')) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refresh_token');
 

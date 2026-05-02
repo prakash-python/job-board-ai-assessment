@@ -1,6 +1,3 @@
-/**
- * AdminUsers Page — Allows ADMINs to manage users.
- */
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { USER_ENDPOINTS } from '../../constants/apiConstants';
@@ -10,11 +7,14 @@ const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const fetchUsers = async () => {
     try {
       const res = await axiosInstance.get(USER_ENDPOINTS.LIST);
-      setUsers(res.data);
+      setUsers(Array.isArray(res.data) ? res.data : []);
     } catch {
       setError('Failed to fetch users.');
     } finally {
@@ -22,15 +22,24 @@ const AdminUsers = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
+
+  const filtered = users.filter(u => {
+    const matchSearch = !search ||
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase());
+    const matchRole = filterRole === 'all' || u.role === filterRole;
+    const matchStatus = filterStatus === 'all' ||
+      (filterStatus === 'active' && u.is_active) ||
+      (filterStatus === 'inactive' && !u.is_active);
+    return matchSearch && matchRole && matchStatus;
+  });
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this user?')) return;
+    if (!window.confirm('Permanently delete this user account?')) return;
     try {
       await axiosInstance.delete(USER_ENDPOINTS.DETAIL(id));
-      setUsers(users.filter(u => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== id));
     } catch {
       alert('Failed to delete user. You cannot delete yourself.');
     }
@@ -38,60 +47,100 @@ const AdminUsers = () => {
 
   if (loading) return <div className="loading-container"><div className="spinner" /></div>;
 
+  const adminCount = users.filter(u => u.role === 'ADMIN').length;
+  const customerCount = users.filter(u => u.role === 'CUSTOMER').length;
+
   return (
-    <div className="page-wrapper">
-      <div className="container">
-        <div className="admin-header fade-in-up">
-          <div>
-            <h1>Manage Users</h1>
-            <p className="text-secondary">View and manage registered users.</p>
-          </div>
+    <div className="admin-page">
+      {/* Header */}
+      <div className="admin-page-header">
+        <div>
+          <h1>Manage Users</h1>
+          <p>{users.length} total users · {adminCount} admin{adminCount !== 1 ? 's' : ''} · {customerCount} candidate{customerCount !== 1 ? 's' : ''}</p>
         </div>
+      </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+      {error && <div className="alert alert-error" style={{ marginBottom: 20 }}>{error}</div>}
 
-        <div className="card admin-table-card fade-in-up fade-in-up-delay-1">
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id}>
-                    <td><strong>{u.name}</strong></td>
-                    <td>{u.email}</td>
-                    <td>
-                      <span className={`badge ${u.role === 'ADMIN' ? 'badge-primary' : 'badge-accent'}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td>
-                      {u.is_active 
-                        ? <span className="badge badge-success">Active</span> 
-                        : <span className="badge badge-danger">Inactive</span>}
-                    </td>
-                    <td>{new Date(u.date_joined).toLocaleDateString()}</td>
-                    <td>
-                      <div className="table-actions">
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(u.id)}>Delete</button>
+      {/* Filter Bar */}
+      <div className="filter-bar">
+        <input
+          className="filter-input"
+          placeholder="🔍  Search by name or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <select className="filter-select" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+          <option value="all">All Roles</option>
+          <option value="ADMIN">Admin</option>
+          <option value="CUSTOMER">Candidate</option>
+        </select>
+        <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      {/* Users Table */}
+      <div className="glass-card">
+        <div className="table-responsive">
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <div className="user-avatar-cell">
+                      <div className="avatar-circle">
+                        {(u.name || u.email || 'U').charAt(0).toUpperCase()}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {users.length === 0 && (
-                  <tr><td colSpan="6" className="text-center text-muted py-4">No users found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <div className="user-cell-info">
+                        <span className="user-cell-name">{u.name || '—'}</span>
+                        <span className="user-cell-email">{u.email}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`badge ${u.role === 'ADMIN' ? 'badge-admin' : 'badge-customer'}`}>
+                      {u.role === 'ADMIN' ? '⚡ Admin' : '👤 Candidate'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${u.is_active ? 'badge-active' : 'badge-inactive'}`}>
+                      {u.is_active ? '● Active' : '● Inactive'}
+                    </span>
+                  </td>
+                  <td style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                    {new Date(u.date_joined).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td>
+                    <div className="row-actions">
+                      <button className="icon-btn danger" title="Delete user" onClick={() => handleDelete(u.id)}>🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan="5">
+                    <div className="empty-state">
+                      <div className="empty-icon">👥</div>
+                      <p>{search || filterRole !== 'all' || filterStatus !== 'all' ? 'No users match your filters.' : 'No users found.'}</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

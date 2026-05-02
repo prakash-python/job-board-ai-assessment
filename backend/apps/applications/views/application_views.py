@@ -25,7 +25,7 @@ class ApplicationListView(APIView):
         else:
             applications = ApplicationService.get_user_applications(request.user)
             
-        serializer = ApplicationSerializer(applications, many=True)
+        serializer = ApplicationSerializer(applications, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -39,7 +39,12 @@ class ApplicationListView(APIView):
         application = ApplicationService.apply_for_job(
             job_id=serializer.validated_data['job_id'],
             user=request.user,
-            cover_letter=serializer.validated_data.get('cover_letter', '')
+            cover_letter=serializer.validated_data.get('cover_letter', ''),
+            phone_number=serializer.validated_data.get('phone_number'),
+            linkedin_link=serializer.validated_data.get('linkedin_link'),
+            github_link=serializer.validated_data.get('github_link'),
+            portfolio_link=serializer.validated_data.get('portfolio_link'),
+            resume=serializer.validated_data.get('resume')
         )
         return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
 
@@ -59,7 +64,7 @@ class ApplicationDetailView(APIView):
         if not request.user.is_admin and application.user.id != request.user.id:
             return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
             
-        serializer = ApplicationSerializer(application)
+        serializer = ApplicationSerializer(application, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, app_id):
@@ -71,8 +76,24 @@ class ApplicationDetailView(APIView):
             status=serializer.validated_data['status'],
             user=request.user
         )
-        return Response(ApplicationSerializer(application).data, status=status.HTTP_200_OK)
+        return Response(ApplicationSerializer(application, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def delete(self, request, app_id):
         ApplicationService.withdraw_application(app_id, request.user)
         return Response({'detail': 'Application withdrawn successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class CheckApplicationView(APIView):
+    """
+    GET /api/applications/check/?job_id=<job_id>
+    Checks if the current user has applied to the specified job.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        job_id = request.query_params.get('job_id')
+        if not job_id:
+            return Response({'detail': 'job_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        result = ApplicationService.check_application_status(request.user, job_id)
+        return Response(result, status=status.HTTP_200_OK)

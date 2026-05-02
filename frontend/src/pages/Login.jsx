@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
@@ -12,6 +12,16 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Auto-dismiss error after 10 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -20,7 +30,17 @@ const Login = () => {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password');
+      console.error("Login error:", err.response?.data);
+      const errorData = err.response?.data;
+      if (typeof errorData === 'string') {
+        setError(errorData);
+      } else if (errorData?.detail) {
+        setError(errorData.detail);
+      } else if (errorData?.non_field_errors) {
+        setError(errorData.non_field_errors[0]);
+      } else {
+        setError('Invalid email or password. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +60,7 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
-              <label>Email Address</label>
+              <label>Email Address <span style={{color: '#ef4444'}}>*</span></label>
               <div className="input-wrapper">
                 <span className="input-icon">✉️</span>
                 <input 
@@ -56,7 +76,7 @@ const Login = () => {
 
             <div className="form-group">
               <div className="auth-options">
-                <label>Password</label>
+                <label>Password <span style={{color: '#ef4444'}}>*</span></label>
                 <Link to="/forgot-password" title="Coming soon!" className="forgot-password">Forgot Password?</Link>
               </div>
               <div className="input-wrapper">

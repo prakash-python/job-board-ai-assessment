@@ -1,155 +1,159 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
-import { JOB_ENDPOINTS } from '../constants/apiConstants';
+import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../constants/apiConstants';
 import JobCard from '../components/JobCard';
 import './JobList.css';
 
-const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
-const WORKPLACE_TYPES = ['Remote', 'Hybrid', 'Onsite'];
-const EXPERIENCE_LEVELS = ['Entry', 'Mid', 'Senior', 'Lead'];
+const JOB_TYPES = ["All Types", "Full Time", "Part Time", "Contract", "Remote", "Internship"];
+
 const SALARY_RANGES = [
-  { label: 'Any', value: 0 },
-  { label: '$50k+', value: 50000 },
-  { label: '$100k+', value: 100000 },
-  { label: '$150k+', value: 150000 },
+  { label: "All Salaries", min: "", max: "" },
+  { label: "0-5 LPA", min: "0", max: "500000" },
+  { label: "5-10 LPA", min: "500000", max: "1000000" },
+  { label: "10-20 LPA", min: "1000000", max: "2000000" },
+  { label: "20+ LPA", min: "2000000", max: "" },
+];
+const DATE_RANGES = [
+  { label: "All Time", value: "" },
+  { label: "Last 24 Hours", value: "24h" },
+  { label: "Last 7 Days", value: "7d" },
+  { label: "Last 30 Days", value: "30d" },
 ];
 
 const JobList = () => {
+  const [searchParams] = useSearchParams();
+  const companyId = searchParams.get('company_id');
+
   const [jobs, setJobs] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // Filter States
-  const [search, setSearch] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedWorkplace, setSelectedWorkplace] = useState([]);
-  const [selectedSalary, setSelectedSalary] = useState(0);
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('All Types');
+  const [selectedLocation, setSelectedLocation] = useState('All Locations');
+  const [selectedSalary, setSelectedSalary] = useState(SALARY_RANGES[0]);
+  const [selectedDate, setSelectedDate] = useState(DATE_RANGES[0]);
+
+  const [locations, setLocations] = useState(["All Locations"]);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchLocations = async () => {
       try {
-        const res = await axiosInstance.get(JOB_ENDPOINTS.LIST);
-        setJobs(res.data);
-        setFiltered(res.data);
-      } catch {
-        setError('Failed to load jobs. Please try again.');
-      } finally {
-        setLoading(false);
+        const res = await axiosInstance.get(JOB_ENDPOINTS.LOCATIONS);
+        setLocations(["All Locations", ...res.data]);
+      } catch (err) {
+        console.error("Failed to fetch locations", err);
       }
     };
-    fetchJobs();
+    fetchLocations();
   }, []);
 
-  useEffect(() => {
-    let result = jobs;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(j => 
-        j.title.toLowerCase().includes(q) || 
-        j.company.toLowerCase().includes(q)
-      );
-    }
-    if (selectedTypes.length > 0) {
-      result = result.filter(j => selectedTypes.includes(j.job_type_display || j.job_type));
-    }
-    if (selectedSalary > 0) {
-      result = result.filter(j => {
-        const matches = j.salary_range?.match(/(\d+)/g);
-        if (matches) {
-          const maxSalary = Math.max(...matches.map(m => parseInt(m) * 1000));
-          return maxSalary >= selectedSalary;
-        }
-        return true;
-      });
-    }
-    setFiltered(result);
-  }, [search, selectedTypes, selectedSalary, jobs]);
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedType !== 'All Types') {
+         const typeMap = {
+           "Full Time": "full-time",
+           "Part Time": "part-time",
+           "Contract": "contract",
+           "Remote": "remote",
+           "Internship": "internship"
+         };
+         params.job_type = typeMap[selectedType];
+      }
+      if (selectedLocation !== 'All Locations') params.location = selectedLocation;
+      if (selectedSalary.min) params.min_salary = selectedSalary.min;
+      if (selectedSalary.max) params.max_salary = selectedSalary.max;
+      if (selectedDate.value) params.date_posted = selectedDate.value;
 
-  const toggleFilter = (setFn, list, item) => {
-    if (list.includes(item)) {
-      setFn(list.filter(i => i !== item));
-    } else {
-      setFn([...list, item]);
+      const endpoint = companyId ? COMPANY_ENDPOINTS.JOBS(companyId) : JOB_ENDPOINTS.LIST;
+      const res = await axiosInstance.get(endpoint, { params });
+      setJobs(res.data);
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load jobs. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchJobs();
+  }, [companyId, searchTerm, selectedType, selectedLocation, selectedSalary, selectedDate]);
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedType('All Types');
+    setSelectedLocation('All Locations');
+    setSelectedSalary(SALARY_RANGES[0]);
+    setSelectedDate(DATE_RANGES[0]);
+  };
+
   return (
-    <div className="jobs-page-container fade-in">
-      <div className="container">
-        <div className="jobs-page-header">
-          <h1 className="page-title">Browse Jobs</h1>
-          <p className="results-count">{filtered.length} positions available</p>
+    <div className="jobs-listing-page fade-in-up">
+      <div className="jobs-header">
+        <h1>{companyId ? 'Company Jobs' : 'Explore Jobs'}</h1>
+        <p className="text-secondary">Find your next role at top companies worldwide.</p>
+      </div>
+
+      <div className="jobs-filter-bar">
+        <div className="search-input-wrapper">
+          <span className="search-icon">🔍</span>
+          <input 
+            type="text" 
+            placeholder="Search job title, keywords..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="filter-search-input"
+          />
         </div>
 
-        <div className="jobs-layout">
-          {/* Sidebar Filters */}
-          <aside className="jobs-sidebar">
-            <div className="filter-section">
-              <h3>Search</h3>
-              <input 
-                type="text" 
-                className="input-field" 
-                placeholder="Title, keyword..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+        <div className="filter-dropdowns">
+          <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)} className="filter-select">
+            {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+          </select>
 
-            <div className="filter-section">
-              <h3>Job Type</h3>
-              <div className="checkbox-group">
-                {JOB_TYPES.map(type => (
-                  <label key={type} className="checkbox-item">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedTypes.includes(type)}
-                      onChange={() => toggleFilter(setSelectedTypes, selectedTypes, type)}
-                    />
-                    {type}
-                  </label>
-                ))}
-              </div>
-            </div>
+          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className="filter-select">
+            {JOB_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+          </select>
 
-            <div className="filter-section">
-              <h3>Salary Range</h3>
-              <div className="salary-pills">
-                {SALARY_RANGES.map(range => (
-                  <button 
-                    key={range.label}
-                    className={`salary-pill ${selectedSalary === range.value ? 'active' : ''}`}
-                    onClick={() => setSelectedSalary(range.value)}
-                  >
-                    {range.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
+          <select value={selectedSalary.label} onChange={(e) => setSelectedSalary(SALARY_RANGES.find(s => s.label === e.target.value))} className="filter-select">
+            {SALARY_RANGES.map(sal => <option key={sal.label} value={sal.label}>{sal.label}</option>)}
+          </select>
 
-          {/* Main Content */}
-          <main className="jobs-main">
-            {loading ? (
-              <div className="jobs-grid">
-                {[1, 2, 4, 5, 6].map(i => <div key={i} className="skeleton" style={{height: '320px', borderRadius: '20px'}}></div>)}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="empty-results">
-                <span className="empty-icon">🔎</span>
-                <h3>No jobs found matching your criteria</h3>
-                <p>Try clearing your filters or searching for something else.</p>
-              </div>
-            ) : (
-              <div className="jobs-grid">
-                {filtered.map(job => (
-                  <JobCard key={job.id} job={job} />
-                ))}
-              </div>
-            )}
-          </main>
+          <select value={selectedDate.label} onChange={(e) => setSelectedDate(DATE_RANGES.find(d => d.label === e.target.value))} className="filter-select">
+            {DATE_RANGES.map(date => <option key={date.label} value={date.label}>{date.label}</option>)}
+          </select>
         </div>
       </div>
+
+      <div className="jobs-results-header">
+        <p>Showing {jobs.length} jobs</p>
+      </div>
+
+      {loading ? (
+        <div className="jobs-grid">
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="skeleton" style={{height: '320px', borderRadius: '16px'}}></div>)}
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-icon">🔎</span>
+          <h3>No jobs found</h3>
+          <p>Try adjusting your filters or search term to find what you're looking for.</p>
+          <button className="btn btn-primary mt-3" style={{display: 'inline-block', marginTop: '16px'}} onClick={handleClearFilters}>Clear Filters</button>
+        </div>
+      ) : (
+        <div className="jobs-grid">
+          {jobs.map(job => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

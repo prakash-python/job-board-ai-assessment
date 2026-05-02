@@ -5,8 +5,9 @@ from apps.accounts.views.user_views import (
     UserDetailView,
     MeView,
     CheckExistsView,
+    CustomerProfileView,
+    ServeResumeView,
 )
-from apps.accounts.views.profile_views import CustomerProfileView
 
 __all__ = [
     'RegisterView',
@@ -16,4 +17,5 @@ __all__ = [
     'MeView',
     'CheckExistsView',
     'CustomerProfileView',
+    'ServeResumeView',
 ]

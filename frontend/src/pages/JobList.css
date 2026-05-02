@@ -1,143 +1,50 @@
-/* JobList Modern Dark Styles */
-
-.jobs-page-container {
-  padding: 120px 0 80px;
-  background: var(--color-bg-primary);
-  min-height: 100vh;
-}
-
-.jobs-page-header {
-  margin-bottom: 48px;
-}
-
-.page-title {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.results-count {
-  color: var(--color-text-secondary);
-  font-size: 1.1rem;
-}
-
-/* Layout */
-.jobs-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 40px;
-  align-items: start;
-}
-
-/* Sidebar */
-.jobs-sidebar {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 32px;
-  position: sticky;
-  top: 100px;
-}
-
-.filter-section {
-  margin-bottom: 32px;
-}
-
-.filter-section h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-  color: #fff;
-}
-
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  color: var(--color-text-secondary);
-  transition: var(--transition-base);
-}
-
-.checkbox-item:hover {
-  color: #fff;
-}
-
-.checkbox-item input {
-  accent-color: var(--color-primary);
-  width: 18px;
-  height: 18px;
-}
-
-/* Salary Pills */
-.salary-pills {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.salary-pill {
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.salary-pill:hover, .salary-pill.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-
-/* Main Area */
-.jobs-main {
+.jobs-listing-page {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+.jobs-header {
+  margin-bottom: 8px;
+}
+
+.jobs-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+/* Filter Bar */
+.jobs-filter-bar {
+  display: flex;
+  gap: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.jobs-results-header {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: -8px;
+}
+
+/* Grid */
 .jobs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
 }
 
-/* Empty State */
-.empty-results {
-  text-align: center;
-  padding: 80px 40px;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-xl);
-  border: 1px dashed var(--color-border);
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-  display: block;
-}
-
-@media (max-width: 1024px) {
-  .jobs-layout {
-    grid-template-columns: 1fr;
-  }
-  .jobs-sidebar {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
+@media (max-width: 768px) {
+  .jobs-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

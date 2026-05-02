@@ -113,6 +113,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ─── DJANGO REST FRAMEWORK ────────────────────────────────────────────────────

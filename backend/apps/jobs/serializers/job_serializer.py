@@ -3,23 +3,43 @@ Serializers for the jobs app.
 """
 
 from rest_framework import serializers
-from apps.jobs.models import Job
+from apps.jobs.models import Job, Company
 from apps.accounts.serializers import UserSerializer
 
+class CompanySerializer(serializers.ModelSerializer):
+    open_jobs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = '__all__'
+
+    def get_open_jobs(self, obj):
+        return obj.jobs.filter(is_active=True).count()
 
 class JobSerializer(serializers.ModelSerializer):
     """Full job serializer — used for read operations."""
     created_by = UserSerializer(read_only=True)
     job_type_display = serializers.CharField(source='get_job_type_display', read_only=True)
+    company = CompanySerializer(read_only=True)
+    company_name = serializers.CharField(source='company.name', read_only=True)
+    has_applied = serializers.SerializerMethodField()
 
     class Meta:
         model = Job
         fields = [
-            'id', 'title', 'company', 'location',
+            'id', 'title', 'company', 'company_name', 'location',
             'job_type', 'job_type_display', 'description',
+            'salary_min', 'salary_max', 'deadline',
             'is_active', 'created_by', 'created_at', 'updated_at',
+            'has_applied'
         ]
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+    def get_has_applied(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return obj.applications.filter(user_id=request.user.id).exists()
+        return False
 
 
 class JobCreateUpdateSerializer(serializers.ModelSerializer):
@@ -27,7 +47,7 @@ class JobCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ['id', 'title', 'company', 'location', 'job_type', 'description', 'is_active']
+        fields = ['id', 'title', 'company', 'location', 'job_type', 'description', 'salary_min', 'salary_max', 'deadline', 'is_active']
         read_only_fields = ['id']
 
     def validate_job_type(self, value):

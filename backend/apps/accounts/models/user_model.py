@@ -3,8 +3,10 @@ Custom User model for the Job Board application.
 Extends AbstractUser to support role-based access (ADMIN, CUSTOMER).
 """
 
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -13,6 +15,7 @@ class User(AbstractUser):
     - email is the unique identifier (used for login)
     - role determines what the user can do
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     class Role(models.TextChoices):
         ADMIN = 'ADMIN', 'Admin'
@@ -56,3 +59,37 @@ class User(AbstractUser):
     def is_customer(self):
         """Helper property to check if user is a customer."""
         return self.role == self.Role.CUSTOMER
+
+
+
+
+
+def user_resume_path(instance, filename):
+    """Generates a dynamic path for each user's resume."""
+    return f'users_resumes/user_{instance.user.id}/{filename}'
+
+
+class CustomerProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+
+    resume = models.FileField(upload_to=user_resume_path, blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)
+    gender = models.CharField(max_length=20, blank=True, null=True, choices=[
+        ('MALE', 'Male'),
+        ('FEMALE', 'Female'),
+        ('OTHER', 'Other'),
+        ('PREFER_NOT_TO_SAY', 'Prefer not to say'),
+    ])
+    education_details = models.TextField(blank=True, null=True)
+    
+    # Social Links
+    linkedin_link = models.URLField(max_length=500, blank=True, null=True)
+    github_link = models.URLField(max_length=500, blank=True, null=True)
+    portfolio_link = models.URLField(max_length=500, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.name}'s Profile"

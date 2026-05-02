@@ -33,10 +33,16 @@ class ApplicationService:
             raise NotFound(f'Application with ID {app_id} not found.')
 
     @staticmethod
-    def apply_for_job(job_id: int, user, cover_letter: str = '') -> Application:
+    def apply_for_job(
+        job_id: int, user, cover_letter: str = '', 
+        phone_number: str = None, 
+        linkedin_link: str = None, github_link: str = None, 
+        portfolio_link: str = None, resume = None
+    ) -> Application:
         """
         Submit a new application for a job.
         CUSTOMERS only.
+        Also updates user's phone and profile if provided.
         """
         if not user.is_customer:
             raise PermissionDenied('Only customers can apply for jobs.')
@@ -47,6 +53,24 @@ class ApplicationService:
 
         if Application.objects.filter(job=job, user=user).exists():
             raise ValidationError('You have already applied for this job.')
+
+        # Update User data if provided
+        if phone_number:
+            user.phone_number = phone_number
+            user.save()
+
+        # Update or Create CustomerProfile
+        from apps.accounts.models import CustomerProfile
+        profile, created = CustomerProfile.objects.get_or_create(user=user)
+        if linkedin_link:
+            profile.linkedin_link = linkedin_link
+        if github_link:
+            profile.github_link = github_link
+        if portfolio_link:
+            profile.portfolio_link = portfolio_link
+        if resume:
+            profile.resume = resume
+        profile.save()
 
         application = Application.objects.create(
             job=job,
@@ -134,3 +158,15 @@ class ApplicationService:
             )
         except Exception as e:
             print(f"[EMAIL ERROR] Failed to send status update to {application.user.email}: {e}")
+
+    @staticmethod
+    def check_application_status(user, job_id: str) -> dict:
+        """Check if a user has applied for a specific job and return status."""
+        application = Application.objects.filter(user=user, job_id=job_id).first()
+        if application:
+            return {
+                'applied': True,
+                'status': application.status,
+                'status_display': application.get_status_display()
+            }
+        return {'applied': False}

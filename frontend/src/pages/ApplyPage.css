@@ -1,62 +1,346 @@
-/* ApplyPage Styles */
-
-.apply-container {
-  max-width: 720px;
+/* ApplyPage Redesign */
+.apply-page-container {
+  padding: 40px 0;
+  max-width: 900px;
   margin: 0 auto;
+}
+
+/* Header Section */
+.apply-header-card {
+  background: var(--gradient-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 24px 32px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.apply-job-summary {
+.apply-form-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Custom Scrollbar for Form Card */
+.apply-form-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.apply-form-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.apply-form-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.apply-form-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header-content-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apply-job-info h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(to right, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.apply-job-meta {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: 12px;
 }
 
-.apply-job-logo {
-  width: 56px;
-  height: 56px;
-  background: var(--gradient-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+/* Progress Stepper - Inline Version */
+.apply-stepper-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  padding: 24px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.apply-stepper-inline::before {
+  content: '';
+  position: absolute;
+  top: calc(24px + 20px);
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 1;
+}
+
+.step-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
-  flex-shrink: 0;
-}
-
-.apply-job-title {
-  font-size: 1.2rem;
-  margin-bottom: 4px;
-}
-
-.apply-job-company {
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-sm);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.apply-form-card { padding: var(--space-2xl); }
-
-.apply-form-header {
-  margin-bottom: var(--space-xl);
+.step-item.active .step-circle {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
 }
-.apply-form-header h1 { font-size: 1.5rem; margin-bottom: var(--space-xs); }
 
-.apply-actions {
+.step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.step-item.active .step-label {
+  color: var(--color-text-primary);
+}
+
+
+
+.form-section {
+  margin-bottom: 40px;
+}
+
+.form-section-title {
   display: flex;
-  gap: var(--space-md);
   align-items: center;
-  justify-content: flex-end;
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--color-border);
+  gap: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-@media (max-width: 480px) {
-  .apply-job-summary { flex-direction: column; text-align: center; }
-  .apply-actions { flex-direction: column-reverse; }
-  .apply-actions .btn { width: 100%; }
+.section-icon {
+  font-size: 1.2rem;
+}
+
+/* Input Fields */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Custom File Upload */
+.custom-file-upload {
+  width: 100%;
+  padding: 40px;
+  background: rgba(59, 130, 246, 0.03);
+  border: 2px dashed var(--color-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-file-upload:hover {
+  background: rgba(59, 130, 246, 0.06);
+  border-color: var(--color-primary);
+}
+
+.upload-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.upload-text {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.upload-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.file-name-display {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Action Buttons */
+.apply-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.btn-cancel {
+  padding: 14px 28px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+}
+
+.btn-submit-premium {
+  padding: 14px 40px;
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-submit-premium:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
+  filter: brightness(1.1);
+}
+
+.btn-submit-premium:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .apply-form-card { padding: 32px 20px; }
+  .apply-header-card { 
+    flex-direction: column; 
+    text-align: center; 
+    gap: 20px;
+    padding: 24px;
+    top: 10px;
+  }
+  .apply-footer-actions { flex-direction: column-reverse; }
+  .apply-footer-actions button { width: 100%; }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.text-center { text-align: center; }
+
+/* Success State icon */
+.success-icon {
+  background: rgba(16, 185, 129, 0.1);
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

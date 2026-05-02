@@ -11,6 +11,7 @@ from apps.accounts.views import (
     MeView,
     CheckExistsView,
     CustomerProfileView,
+    ServeResumeView,
 )
 
 urlpatterns = [
@@ -22,6 +23,7 @@ urlpatterns = [
     
     # Profile
     path('profile/', CustomerProfileView.as_view(), name='profile'),
+    path('resume/', ServeResumeView.as_view(), name='serve-resume'),
 
     # User management (admin)
     path('users/', UserListView.as_view(), name='user-list'),

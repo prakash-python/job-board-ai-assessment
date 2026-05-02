@@ -8,15 +8,64 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from apps.accounts.serializers import (
     UserSerializer,
     RegisterSerializer,
     LoginSerializer,
     UpdateUserSerializer,
+    CustomerProfileSerializer,
 )
-from apps.accounts.services import UserService
+from apps.accounts.services import UserService, ProfileService
 from apps.accounts.permissions import IsAdminRole
 from apps.accounts.models import User
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.http import FileResponse
+
+class ServeResumeView(APIView):
+    """
+    Securely serves the user's resume PDF while allowing it to be 
+    embedded in an iframe within the application.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @method_decorator(xframe_options_exempt)
+    def get(self, request):
+        profile = ProfileService.get_or_create_profile(request.user)
+        if not profile.resume:
+            return Response({'detail': 'No resume found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Open the file and return as FileResponse
+        response = FileResponse(profile.resume.open(), content_type='application/pdf')
+        # Ensure it's treated as an inline file, not a download
+        response['Content-Disposition'] = 'inline; filename="resume.pdf"'
+        return response
+
+class CustomerProfileView(APIView):
+    """
+    GET /api/accounts/profile/ — Get own profile
+    PUT /api/accounts/profile/ — Update own profile
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get(self, request):
+        profile = ProfileService.get_or_create_profile(request.user)
+        serializer = CustomerProfileSerializer(profile, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        # We don't use the standard serializer.save() here because we use the service layer
+        resume_file = request.FILES.get('resume')
+        
+        # Extract data excluding the file
+        data = {k: v for k, v in request.data.items() if k != 'resume' and v != 'null' and v != ''}
+        
+        profile = ProfileService.update_profile(request.user, data, resume_file)
+        return Response(CustomerProfileSerializer(profile, context={'request': request}).data, status=status.HTTP_200_OK)
+
 
 class CheckExistsView(APIView):
     """POST /api/accounts/check-exists/ — Pre-check if email/phone exists."""
@@ -49,7 +98,7 @@ class RegisterView(APIView):
             password=data['password'],
             phone_number=data.get('phone_number'),
         )
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class LoginView(APIView):
@@ -66,7 +115,7 @@ class LoginView(APIView):
         return Response({
             'access': result['access'],
             'refresh': result['refresh'],
-            'user': UserSerializer(result['user']).data,
+            'user': UserSerializer(result['user'], context={'request': request}).data,
         }, status=status.HTTP_200_OK)
 
 
@@ -76,7 +125,7 @@ class UserListView(APIView):
 
     def get(self, request):
         users = UserService.get_all_users()
-        serializer = UserSerializer(users, many=True)
+        serializer = UserSerializer(users, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -88,7 +137,7 @@ class UserListView(APIView):
             password=data.get('password'),
             role=data.get('role', 'CUSTOMER'),
         )
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class UserDetailView(APIView):
@@ -101,13 +150,13 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         user = UserService.get_user_by_id(user_id)
-        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def put(self, request, user_id):
         serializer = UpdateUserSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         user = UserService.update_user(user_id, serializer.validated_data, request.user)
-        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def delete(self, request, user_id):
         UserService.delete_user(user_id, request.user)
@@ -119,4 +168,4 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(request.user, context={'request': request}).data, status=status.HTTP_200_OK)

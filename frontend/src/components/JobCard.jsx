@@ -2,11 +2,20 @@ import { Link } from 'react-router-dom';
 import './JobCard.css';
 
 const JobCard = ({ job }) => {
-  const companyInitial = job.company ? job.company.charAt(0).toUpperCase() : 'J';
+  const companyName = job.company_name || 'Unknown Company';
+  const companyInitial = companyName.charAt(0).toUpperCase();
   
   // Calculate relative time
   const daysAgo = Math.floor((new Date() - new Date(job.created_at)) / (1000 * 60 * 60 * 24));
   let timeText = daysAgo === 0 ? 'Today' : `${daysAgo}d ago`;
+
+  const formatSalary = (salary) => {
+    if (!salary) return '';
+    return (salary / 100000).toFixed(1) + ' LPA';
+  };
+  const salaryText = job.salary_min && job.salary_max 
+    ? `${formatSalary(job.salary_min)} - ${formatSalary(job.salary_max)}` 
+    : 'Not Disclosed';
 
   return (
     <div className="job-card-premium fade-in">
@@ -19,11 +28,11 @@ const JobCard = ({ job }) => {
 
       <div className="job-card-body">
         <h3 className="job-title">{job.title}</h3>
-        <p className="job-company">{job.company}</p>
+        <p className="job-company">{companyName}</p>
         
         <div className="job-details-row">
           <span className="detail-item">📍 {job.location}</span>
-          <span className="detail-item">💰 {job.salary_range || '$120k - $160k'}</span>
+          <span className="detail-item">💰 {salaryText}</span>
         </div>
       </div>
 

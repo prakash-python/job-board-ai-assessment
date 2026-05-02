@@ -25,11 +25,20 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new application (CUSTOMER)."""
-    job_id = serializers.IntegerField(write_only=True)
+    job_id = serializers.UUIDField(write_only=True)
+    phone_number = serializers.CharField(write_only=True, required=False)
+    linkedin_link = serializers.URLField(write_only=True, required=False)
+    github_link = serializers.URLField(write_only=True, required=False)
+    portfolio_link = serializers.URLField(write_only=True, required=False)
+    resume = serializers.FileField(write_only=True, required=False)
 
     class Meta:
         model = Application
-        fields = ['id', 'job_id', 'cover_letter']
+        fields = [
+            'id', 'job_id', 'cover_letter', 'phone_number', 
+            'linkedin_link', 'github_link', 
+            'portfolio_link', 'resume'
+        ]
         read_only_fields = ['id']
 
 

@@ -3,6 +3,7 @@ Application model for the Job Board application.
 Represents a customer's application to a job posting.
 """
 
+import uuid
 from django.db import models
 from django.conf import settings
 from apps.jobs.models import Job
@@ -14,9 +15,12 @@ class Application(models.Model):
     - Status can be updated by ADMIN (ACCEPTED/REJECTED).
     - Email notifications are sent on apply and status change.
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     class Status(models.TextChoices):
         APPLIED = 'APPLIED', 'Applied'
+        REVIEWED = 'REVIEWED', 'Reviewed'
+        SHORTLISTED = 'SHORTLISTED', 'Shortlisted'
         ACCEPTED = 'ACCEPTED', 'Accepted'
         REJECTED = 'REJECTED', 'Rejected'
 

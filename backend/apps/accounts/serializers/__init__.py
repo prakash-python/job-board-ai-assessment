@@ -4,8 +4,8 @@ from apps.accounts.serializers.user_serializer import (
     LoginSerializer,
     TokenResponseSerializer,
     UpdateUserSerializer,
+    CustomerProfileSerializer,
 )
-from apps.accounts.serializers.profile_serializer import CustomerProfileSerializer
 
 __all__ = [
     'UserSerializer',
