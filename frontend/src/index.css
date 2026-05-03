@@ -178,6 +178,13 @@ h1, h2, h3, h4 {
   100% { background-position: -200% 0; }
 }
 
+/* ─── Public Layout Padding ──────────────────────────────────── */
+.public-page-padding {
+  padding-top: calc(var(--navbar-height) + 40px) !important;
+  padding-bottom: 60px;
+  min-height: calc(100vh - var(--navbar-height));
+}
+
 @media (max-width: 768px) {
   .container { padding: 0 1rem; }
 }

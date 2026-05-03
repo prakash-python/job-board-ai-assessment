@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../api/api';
 import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../constants/apiConstants';
 import JobCard from '../components/JobCard';
+import { useAuth } from '../context/AuthContext';
 import './JobList.css';
 
 const JOB_TYPES = ["All Types", "Full Time", "Part Time", "Contract", "Remote", "Internship"];
@@ -22,6 +23,7 @@ const DATE_RANGES = [
 ];
 
 const JobList = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const companyId = searchParams.get('company_id');
 
@@ -115,7 +117,7 @@ const JobList = () => {
   };
 
   return (
-    <div className="jobs-listing-page fade-in-up">
+    <div className={`jobs-listing-page fade-in-up container ${!user ? 'public-page-padding' : ''}`}>
       <div className="jobs-header">
         <h1>{companyId ? 'Company Jobs' : 'Explore Jobs'}</h1>
         <p className="text-secondary">Find your next role at top companies worldwide.</p>

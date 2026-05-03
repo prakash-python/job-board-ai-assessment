@@ -4,6 +4,7 @@ import api from '../api/api';
 import { COMPANY_ENDPOINTS, JOB_ENDPOINTS } from '../constants/apiConstants';
 import CompanyCard from '../components/CompanyCard';
 import EditCompanyModal from '../components/EditCompanyModal';
+import { useAuth } from '../context/AuthContext';
 import './Companies.css';
 
 const INDUSTRIES = ["All Industries", "Technology", "Finance", "Healthcare", "Logistics", "Media", "Retail"];
@@ -25,6 +26,7 @@ const DATE_RANGES = [
 ];
 
 const Companies = () => {
+  const { user, isAdmin } = useAuth();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -135,7 +137,7 @@ const Companies = () => {
   };
 
   return (
-    <div className="companies-listing-page fade-in-up">
+    <div className={`companies-page fade-in-up container ${!user ? 'public-page-padding' : ''}`}>
       <div className="companies-header">
         <h1>Discover Companies</h1>
         <p className="text-secondary">Find your next great workplace from our curated list of top employers.</p>
