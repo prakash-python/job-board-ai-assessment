@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './SidebarLayout.css';
 
 const SidebarLayout = ({ type }) => {
   const { user, logout, isAdmin } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const adminLinks = [
     { to: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
@@ -31,20 +33,30 @@ const SidebarLayout = ({ type }) => {
       <aside className="sidebar">
         {/* Brand Header */}
         <div className="sidebar-header">
-          <div className="sidebar-brand-icon">💼</div>
-          <div>
-            <h2>Hireloop</h2>
-            <p className="sidebar-header-sub">{hubLabel}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="sidebar-brand-icon">💼</div>
+            <div>
+              <h2>Hireloop</h2>
+              <p className="sidebar-header-sub">{hubLabel}</p>
+            </div>
           </div>
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            ⋮
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="sidebar-nav">
+        <nav className={`sidebar-nav ${isMobileMenuOpen ? 'open' : ''}`}>
           <p className="sidebar-nav-title">Main Menu</p>
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
+              onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
             >
               <span className="sidebar-icon">{link.icon}</span>
@@ -54,7 +66,7 @@ const SidebarLayout = ({ type }) => {
         </nav>
 
         {/* User Footer */}
-        <div className="sidebar-footer">
+        <div className={`sidebar-footer ${isMobileMenuOpen ? 'open' : ''}`}>
           <div className="sidebar-user-card">
             <div className="user-avatar-small">
               {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
