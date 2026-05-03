@@ -28,7 +28,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      window.location.href = '/dashboard';
+      navigate('/dashboard');
     } catch (err) {
       console.error("Login error:", err.response?.data);
       const errorData = err.response?.data;

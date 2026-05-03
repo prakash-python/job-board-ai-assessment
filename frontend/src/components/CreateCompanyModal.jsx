@@ -51,9 +51,6 @@ const CreateCompanyModal = ({ onClose, onSuccess }) => {
         },
       });
       onSuccess(res.data);
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to create company. Please check the details.');
     } finally {

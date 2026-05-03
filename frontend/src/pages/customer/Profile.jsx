@@ -78,11 +78,8 @@ const Profile = () => {
       setMessage('Profile updated successfully!');
       if (res.data.resume_url) setExistingResume(res.data.resume_url);
       
-      // Auto-hide success message and reload
-      setTimeout(() => {
-        setMessage('');
-        window.location.reload();
-      }, 1500);
+      // Auto-hide success message
+      setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setError('Failed to update profile.');
       setTimeout(() => setError(''), 3000);

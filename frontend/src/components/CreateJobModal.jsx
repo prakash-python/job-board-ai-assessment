@@ -62,9 +62,6 @@ const CreateJobModal = ({ editJob, companies, onClose, onSuccess, onRefreshCompa
         await api.post(JOB_ENDPOINTS.LIST, form);
       }
       onSuccess();
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to save job. Check all required fields.');
     } finally {

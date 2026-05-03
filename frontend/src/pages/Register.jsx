@@ -184,7 +184,7 @@ const Register = () => {
         password: formData.password,
         role: formData.role
       });
-      window.location.href = '/signin';
+      navigate('/signin');
     } catch (err) {
       const errorData = err.response?.data;
       if (typeof errorData === 'object' && !Array.isArray(errorData)) {
