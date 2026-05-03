@@ -5,3 +5,4 @@ def home_view(request):
         "status": "ok",
         "message": "Job Board API is running successfully 🚀"
     })
+
