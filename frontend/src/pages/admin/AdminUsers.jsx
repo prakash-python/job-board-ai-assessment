@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { USER_ENDPOINTS } from '../../constants/apiConstants';
+import { useAuth } from '../../context/AuthContext';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import './Admin.css';
 
 const AdminUsers = () => {
@@ -10,6 +12,8 @@ const AdminUsers = () => {
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [confirmModal, setConfirmModal] = useState({ show: false, id: null });
+  const { user: currentUser } = useAuth();
 
   const fetchUsers = async () => {
     try {
@@ -35,13 +39,19 @@ const AdminUsers = () => {
     return matchSearch && matchRole && matchStatus;
   });
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Permanently delete this user account?')) return;
+  const showDeleteConfirm = (id) => {
+    setConfirmModal({ show: true, id });
+  };
+  
+  const handleDelete = async () => {
+    const id = confirmModal.id;
+    setConfirmModal({ show: false, id: null });
     try {
       await axiosInstance.delete(USER_ENDPOINTS.DETAIL(id));
       setUsers(prev => prev.filter(u => u.id !== id));
-    } catch {
-      alert('Failed to delete user. You cannot delete yourself.');
+    } catch (err) {
+      const msg = err.response?.data?.detail || (typeof err.response?.data === 'string' && err.response?.data.includes('<!DOCTYPE') ? 'Server error occurred.' : err.response?.data) || 'Failed to delete user.';
+      setError(msg);
     }
   };
 
@@ -124,7 +134,11 @@ const AdminUsers = () => {
                   </td>
                   <td>
                     <div className="row-actions">
-                      <button className="icon-btn danger" title="Delete user" onClick={() => handleDelete(u.id)}>🗑</button>
+                      {u.id !== currentUser?.id ? (
+                        <button className="icon-btn danger" title="Delete user" onClick={() => showDeleteConfirm(u.id)}>🗑</button>
+                      ) : (
+                        <span className="text-muted text-xs font-medium">Current User</span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -143,6 +157,15 @@ const AdminUsers = () => {
           </table>
         </div>
       </div>
+      
+      <ConfirmationModal
+        show={confirmModal.show}
+        title="Delete User"
+        message="Are you sure you want to permanently delete this user account? This action cannot be undone."
+        confirmText="Delete User"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmModal({ show: false, id: null })}
+      />
     </div>
   );
 };

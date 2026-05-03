@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../../constants/apiConstants';
 import CreateJobModal from '../../components/CreateJobModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import './Admin.css';
 
 const AdminJobs = () => {
@@ -16,6 +17,7 @@ const AdminJobs = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [confirmModal, setConfirmModal] = useState({ show: false, id: null });
   const pageSize = 10;
 
   const fetchJobs = async (isInitial = false) => {
@@ -76,13 +78,19 @@ const AdminJobs = () => {
     fetchJobs();
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Permanently delete this job posting?')) return;
+  const showDeleteConfirm = (id) => {
+    setConfirmModal({ show: true, id });
+  };
+
+  const handleDelete = async () => {
+    const id = confirmModal.id;
+    setConfirmModal({ show: false, id: null });
     try {
       await axiosInstance.delete(JOB_ENDPOINTS.DETAIL(id));
       setJobs(prev => prev.filter(j => j.id !== id));
-    } catch {
-      alert('Failed to delete job.');
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Failed to delete job.';
+      setError(msg);
     }
   };
 
@@ -165,7 +173,7 @@ const AdminJobs = () => {
                     <div className="row-actions">
                       <Link to={`/jobs/${job.id}`} className="icon-btn" title="View">👁</Link>
                       <button className="icon-btn primary" title="Edit" onClick={() => openEdit(job)}>✏️</button>
-                      <button className="icon-btn danger" title="Delete" onClick={() => handleDelete(job.id)}>🗑</button>
+                      <button className="icon-btn danger" title="Delete" onClick={() => showDeleteConfirm(job.id)}>🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -218,6 +226,16 @@ const AdminJobs = () => {
           onRefreshCompanies={fetchCompanies}
         />
       )}
+      
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal 
+        show={confirmModal.show}
+        title="Delete Job Posting"
+        message="Are you sure you want to permanently delete this job posting? This action cannot be undone."
+        confirmText="Delete Job"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmModal({ show: false, id: null })}
+      />
     </div>
   );
 };
