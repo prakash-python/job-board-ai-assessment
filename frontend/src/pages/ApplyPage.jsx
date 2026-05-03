@@ -152,7 +152,9 @@ const ApplyPage = () => {
 
       setSuccess('Application submitted! A confirmation email has been sent to you.');
       setCurrentStep(4);
-      setTimeout(() => navigate('/my-applications'), 2500);
+      setTimeout(() => {
+        window.location.href = '/my-applications';
+      }, 2500);
     } catch (err) {
       console.error(err);
       const data = err.response?.data;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLogoUrl, getAvatarColor } from '../utils/formatters';
 import { useAuth } from '../context/AuthContext';
@@ -8,6 +8,10 @@ const CompanyCard = ({ company, onEdit, onDelete }) => {
   const [imgError, setImgError] = useState(false);
   const { isAdmin } = useAuth();
   const logoUrl = getLogoUrl(company.logo);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [company.logo]);
 
   const handleDeleteClick = () => {
     if (window.confirm('Are you sure you want to delete this company? This action cannot be undone.')) {

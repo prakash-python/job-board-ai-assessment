@@ -91,6 +91,9 @@ const EditCompanyModal = ({ company, isOpen, onClose, onSuccess }) => {
       // Call the success callback with updated company
       onSuccess(response.data);
       onClose();
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Failed to update company');
       console.error('Update error:', err);
