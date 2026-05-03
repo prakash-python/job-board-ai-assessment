@@ -6,12 +6,16 @@ import { useAuth } from '../context/AuthContext';
 const CompanyCard = ({ company, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [logoVersion, setLogoVersion] = useState(Date.now());
   const { isAdmin } = useAuth();
-  const logoUrl = getLogoUrl(company.logo);
-
+  
   useEffect(() => {
     setImgError(false);
-  }, [company.logo]);
+    setLogoVersion(Date.now());
+  }, [company]);
+
+  const rawLogoUrl = getLogoUrl(company.logo);
+  const logoUrl = rawLogoUrl ? `${rawLogoUrl}?v=${logoVersion}` : null;
 
   const handleDeleteClick = () => {
     if (window.confirm('Are you sure you want to delete this company? This action cannot be undone.')) {

@@ -1,16 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLogoUrl, getAvatarColor } from '../utils/formatters';
 import './JobCard.css';
 
 const JobCard = ({ job }) => {
   const [imgError, setImgError] = useState(false);
+  const [logoVersion, setLogoVersion] = useState(Date.now());
   const companyName = job.company?.name || job.company_name || 'Unknown Company';
-  const logoUrl = getLogoUrl(job.company?.logo);
+  const rawLogoUrl = getLogoUrl(job.company?.logo);
+  const logoUrl = rawLogoUrl ? `${rawLogoUrl}?v=${logoVersion}` : null;
   
   // Calculate relative time
   const daysAgo = Math.floor((new Date() - new Date(job.created_at)) / (1000 * 60 * 60 * 24));
   let timeText = daysAgo === 0 ? 'Today' : `${daysAgo}d ago`;
+
+  useEffect(() => {
+    setImgError(false);
+    setLogoVersion(Date.now());
+  }, [job]);
 
   const formatSalary = (salary) => {
     if (!salary) return '';
