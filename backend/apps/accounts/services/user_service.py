@@ -4,14 +4,19 @@ All business logic related to users lives here.
 Views are kept thin and only call these service functions.
 """
 
+import threading
+import logging
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError, AuthenticationFailed, NotFound, PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.models import User, CustomerProfile
+
+logger = logging.getLogger(__name__)
 
 
 class ProfileService:
@@ -39,17 +44,54 @@ class ProfileService:
 
 class UserService:
     @staticmethod
+    def _send_registration_email(email: str, name: str) -> None:
+        """
+        Send registration confirmation email asynchronously.
+        This runs in a separate thread to avoid blocking the request.
+        """
+        try:
+            logger.info(f"[ASYNC EMAIL] Starting email send for {email}")
+            subject = "Welcome to Job Board!"
+            message = (
+                f"Hi {name},\n\n"
+                f"Your registration was successful. Welcome to Job Board!\n"
+                f"Explore thousands of opportunities and find your dream job.\n\n"
+                f"Click here to explore opportunities: http://localhost:5173/jobs\n\n"
+                f"Best regards,\n"
+                f"The Job Board Team"
+            )
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            logger.info(f"[ASYNC EMAIL] Successfully sent email to {email}")
+        except Exception as e:
+            logger.error(f"[ASYNC EMAIL ERROR] Failed to send registration email to {email}: {e}")
+
+    @staticmethod
     def register_user(email: str, name: str, password: str, phone_number: str = None) -> User:
         """
         Create a new CUSTOMER user.
         Raises ValidationError if email or phone is already taken.
+        Email sending is done asynchronously to prevent timeout.
         """
-        if User.objects.filter(email=email).exists():
-            raise ValidationError({'email': 'A user with this email already exists.'})
+        logger.info(f"[REGISTRATION] Step 1: Starting validation for email={email}")
+        
+        # Optimize: Use single query with Q objects to check both email and phone uniqueness
+        existing_user = User.objects.filter(
+            Q(email=email) | Q(phone_number=phone_number)
+        ).first() if phone_number else User.objects.filter(email=email).first()
+        
+        if existing_user:
+            if existing_user.email == email:
+                raise ValidationError({'email': 'A user with this email already exists.'})
+            else:
+                raise ValidationError({'phone_number': 'A user with this phone number already exists.'})
 
-        if phone_number and User.objects.filter(phone_number=phone_number).exists():
-            raise ValidationError({'phone_number': 'A user with this phone number already exists.'})
-
+        logger.info(f"[REGISTRATION] Step 2: Creating user for email={email}")
         user = User.objects.create_user(
             email=email,
             name=name,
@@ -57,27 +99,16 @@ class UserService:
             phone_number=phone_number,
             role=User.Role.CUSTOMER,
         )
+        logger.info(f"[REGISTRATION] Step 2: User created successfully, user_id={user.id}")
 
-        # Send success email
-        subject = "Welcome to Job Board!"
-        message = (
-            f"Hi {name},\n\n"
-            f"Your registration was successful. Welcome to Job Board!\n"
-            f"Explore thousands of opportunities and find your dream job.\n\n"
-            f"Click here to explore opportunities: http://localhost:5173/jobs\n\n"
-            f"Best regards,\n"
-            f"The Job Board Team"
+        # Send email asynchronously in a separate thread
+        logger.info(f"[REGISTRATION] Step 3: Sending registration email asynchronously")
+        email_thread = threading.Thread(
+            target=UserService._send_registration_email,
+            args=(user.email, user.name),
+            daemon=True
         )
-        try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=True,
-            )
-        except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send registration email to {user.email}: {e}")
+        email_thread.start()
 
         return user
 

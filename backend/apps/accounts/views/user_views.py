@@ -3,6 +3,7 @@ Views for the accounts app.
 Views are kept thin — all logic is delegated to service functions.
 """
 
+import logging
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -23,6 +24,8 @@ from apps.accounts.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.http import FileResponse
+
+logger = logging.getLogger(__name__)
 
 class ServeResumeView(APIView):
     """
@@ -89,15 +92,24 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        logger.info("[REGISTRATION] RegisterView.post() called")
+        logger.info(f"[REGISTRATION] Request data received: email={request.data.get('email')}")
+        
         serializer = RegisterSerializer(data=request.data)
+        logger.info("[REGISTRATION] Validating registration data")
+        
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        
+        logger.info("[REGISTRATION] Calling UserService.register_user()")
         user = UserService.register_user(
             email=data['email'],
             name=data['name'],
             password=data['password'],
             phone_number=data.get('phone_number'),
         )
+        
+        logger.info(f"[REGISTRATION] User registered successfully, returning response")
         return Response(UserSerializer(user, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
