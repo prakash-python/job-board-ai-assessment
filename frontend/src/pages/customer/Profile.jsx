@@ -105,9 +105,9 @@ const Profile = () => {
         <div className="profile-sidebar">
           <div className="profile-card user-summary-card">
             <div className="profile-avatar-large">
-              {user?.username?.charAt(0).toUpperCase() || 'U'}
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
             </div>
-            <h2 className="profile-name">{user?.username || 'User'}</h2>
+            <h2 className="profile-name">{user?.name || user?.email?.split('@')[0] || 'User'}</h2>
             <div className="profile-role-badge">Candidate</div>
             
             <div className="profile-quick-info">

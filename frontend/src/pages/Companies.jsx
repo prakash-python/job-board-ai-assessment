@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../api/api';
 import { COMPANY_ENDPOINTS, JOB_ENDPOINTS } from '../constants/apiConstants';
 import CompanyCard from '../components/CompanyCard';
+import EditCompanyModal from '../components/EditCompanyModal';
 import './Companies.css';
 
 const INDUSTRIES = ["All Industries", "Technology", "Finance", "Healthcare", "Logistics", "Media", "Retail"];
@@ -36,6 +37,11 @@ const Companies = () => {
   const [selectedSalary, setSelectedSalary] = useState(SALARY_RANGES[0]);
   const [selectedDate, setSelectedDate] = useState(DATE_RANGES[0]);
   const [locations, setLocations] = useState(["All Locations"]);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -97,6 +103,37 @@ const Companies = () => {
     setSelectedDate(DATE_RANGES[0]);
   };
 
+  // Edit handler
+  const handleEditCompany = (company) => {
+    setSelectedCompany(company);
+    setIsModalOpen(true);
+  };
+
+  // Edit success handler
+  const handleEditSuccess = (updatedCompany) => {
+    // Update the company in the list
+    setCompanies(prev =>
+      prev.map(c => c.id === updatedCompany.id ? updatedCompany : c)
+    );
+  };
+
+  // Delete handler
+  const handleDeleteCompany = async (companyId) => {
+    setDeleteLoading(true);
+    try {
+      await api.delete(COMPANY_ENDPOINTS.DETAIL(companyId));
+      // Remove company from list
+      setCompanies(prev => prev.filter(c => c.id !== companyId));
+      // Show success message
+      alert('Company deleted successfully');
+    } catch (err) {
+      alert(`Failed to delete company: ${err.response?.data?.detail || err.message}`);
+      console.error('Delete error:', err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className="companies-listing-page fade-in-up">
       <div className="companies-header">
@@ -156,7 +193,12 @@ const Companies = () => {
         <>
           <div className="companies-grid">
             {filteredCompanies.map(company => (
-              <CompanyCard key={company.id} company={company} />
+              <CompanyCard
+                key={company.id}
+                company={company}
+                onEdit={handleEditCompany}
+                onDelete={handleDeleteCompany}
+              />
             ))}
           </div>
           
@@ -173,6 +215,17 @@ const Companies = () => {
           )}
         </>
       )}
+
+      {/* Edit Company Modal */}
+      <EditCompanyModal
+        company={selectedCompany}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedCompany(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 };

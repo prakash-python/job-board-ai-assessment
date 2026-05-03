@@ -1,14 +1,44 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLogoUrl, getAvatarColor } from '../utils/formatters';
+import { useAuth } from '../context/AuthContext';
 
-const CompanyCard = ({ company }) => {
+const CompanyCard = ({ company, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const { isAdmin } = useAuth();
   const logoUrl = getLogoUrl(company.logo);
+
+  const handleDeleteClick = () => {
+    if (window.confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
+      onDelete(company.id);
+    }
+  };
 
   return (
     <div className={`company-card ${isExpanded ? 'expanded' : ''}`}>
+      {/* Admin Actions - Top Right */}
+      {isAdmin && (
+        <div className="company-card-actions">
+          <button
+            className="action-btn edit-btn"
+            onClick={() => onEdit(company)}
+            title="Edit company"
+            aria-label="Edit company"
+          >
+            ✏️
+          </button>
+          <button
+            className="action-btn delete-btn"
+            onClick={handleDeleteClick}
+            title="Delete company"
+            aria-label="Delete company"
+          >
+            🗑️
+          </button>
+        </div>
+      )}
+      
       <div className="company-card-header">
         <div className="company-logo" style={{ background: imgError || !logoUrl ? getAvatarColor(company.name) : '#ffffff', overflow: 'hidden', padding: '6px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.5rem', color: '#fff' }}>
           {logoUrl && !imgError ? (
