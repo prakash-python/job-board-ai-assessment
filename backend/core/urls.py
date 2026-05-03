@@ -7,11 +7,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from rest_framework_simplejwt.views import TokenRefreshView
+from .views import home_view
 
 urlpatterns = [
+    # Root API view
+    path('', home_view, name='home'),
+    
     # Django admin panel
     path('admin/', admin.site.urls),
-
+    
     # JWT token refresh endpoint
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
