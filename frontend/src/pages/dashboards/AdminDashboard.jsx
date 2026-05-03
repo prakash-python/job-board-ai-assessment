@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { USER_ENDPOINTS, JOB_ENDPOINTS, APPLICATION_ENDPOINTS } from '../../constants/apiConstants';
 import '../admin/Admin.css';
 
@@ -14,9 +14,9 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         const [usersRes, jobsRes, appsRes] = await Promise.all([
-          axiosInstance.get(USER_ENDPOINTS.LIST),
-          axiosInstance.get(JOB_ENDPOINTS.LIST),
-          axiosInstance.get(APPLICATION_ENDPOINTS.LIST),
+          api.get(USER_ENDPOINTS.LIST),
+          api.get(JOB_ENDPOINTS.LIST),
+          api.get(APPLICATION_ENDPOINTS.LIST),
         ]);
         const usersResData = usersRes.data.results || usersRes.data;
         const jobsResData = jobsRes.data.results || jobsRes.data;

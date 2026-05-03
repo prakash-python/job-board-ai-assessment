@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { APPLICATION_ENDPOINTS } from '../../constants/apiConstants';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './CustomerDashboard.css';
@@ -12,8 +12,8 @@ const CustomerDashboard = () => {
   useEffect(() => {
     const fetchApps = async () => {
       try {
-        const res = await axiosInstance.get(APPLICATION_ENDPOINTS.LIST);
-        setApps(res.data);
+        const appData = res.data.results || res.data;
+        setApps(Array.isArray(appData) ? appData : []);
       } catch (err) {
         console.error(err);
       } finally {

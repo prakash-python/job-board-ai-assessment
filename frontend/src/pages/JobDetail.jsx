@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { JOB_ENDPOINTS, APPLICATION_ENDPOINTS } from '../constants/apiConstants';
 import { useAuth } from '../context/AuthContext';
 import './JobDetail.css';
@@ -21,7 +21,7 @@ const JobDetail = () => {
       setLoading(true);
       try {
         // Step 1: Fetch job details
-        const jobRes = await axiosInstance.get(`${JOB_ENDPOINTS.DETAIL(id)}?t=${Date.now()}`);
+        const jobRes = await api.get(`${JOB_ENDPOINTS.DETAIL(id)}?t=${Date.now()}`);
         setJob(jobRes.data);
         
         // Initial fallback from job object
@@ -32,7 +32,7 @@ const JobDetail = () => {
         // Step 2: Explicitly check application status if logged in
         if (user && !isAdmin) {
           try {
-            const checkRes = await axiosInstance.get(APPLICATION_ENDPOINTS.CHECK, {
+            const checkRes = await api.get(APPLICATION_ENDPOINTS.CHECK, {
               params: { job_id: id }
             });
             setIsApplied(checkRes.data.applied);
@@ -54,7 +54,7 @@ const JobDetail = () => {
     if (!window.confirm('Are you sure you want to delete this job?')) return;
     setDeleting(true);
     try {
-      await axiosInstance.delete(JOB_ENDPOINTS.DETAIL(id));
+      await api.delete(JOB_ENDPOINTS.DETAIL(id));
       navigate('/admin/jobs');
     } catch {
       setError('Failed to delete job.');

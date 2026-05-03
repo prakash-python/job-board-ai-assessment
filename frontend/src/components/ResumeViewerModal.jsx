@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 
 const ResumeViewerModal = ({ fileUrl, userName = "Candidate", onClose }) => {
   const [blobUrl, setBlobUrl] = useState('');
@@ -20,7 +20,7 @@ const ResumeViewerModal = ({ fileUrl, userName = "Candidate", onClose }) => {
       setError(false);
       const fetchBlob = async () => {
         try {
-          const res = await axiosInstance.get(fileUrl, { responseType: 'blob' });
+          const res = await api.get(fileUrl, { responseType: 'blob' });
           url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
           setBlobUrl(url);
         } catch {

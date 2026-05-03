@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../../constants/apiConstants';
 import CreateJobModal from '../../components/CreateJobModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -27,7 +27,7 @@ const AdminJobs = () => {
       if (search) params.search = search;
       if (filterStatus !== 'all') params.is_active = filterStatus === 'active';
 
-      const res = await axiosInstance.get(JOB_ENDPOINTS.LIST, { params });
+      const res = await api.get(JOB_ENDPOINTS.LIST, { params });
       const jobsData = res.data.results || res.data;
       setJobs(Array.isArray(jobsData) ? jobsData : []);
       setTotalCount(res.data.count || (Array.isArray(res.data) ? res.data.length : 0));
@@ -40,7 +40,7 @@ const AdminJobs = () => {
 
   const fetchCompanies = async () => {
     try {
-      const res = await axiosInstance.get(COMPANY_ENDPOINTS.LIST);
+      const res = await api.get(COMPANY_ENDPOINTS.LIST);
       const companiesData = res.data.results || res.data;
       setCompanies(Array.isArray(companiesData) ? companiesData : []);
     } catch {
@@ -86,7 +86,7 @@ const AdminJobs = () => {
     const id = confirmModal.id;
     setConfirmModal({ show: false, id: null });
     try {
-      await axiosInstance.delete(JOB_ENDPOINTS.DETAIL(id));
+      await api.delete(JOB_ENDPOINTS.DETAIL(id));
       setJobs(prev => prev.filter(j => j.id !== id));
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to delete job.';

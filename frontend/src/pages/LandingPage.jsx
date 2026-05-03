@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import JobCard from '../components/JobCard';
 import './LandingPage.css';
 
@@ -13,7 +13,7 @@ const LandingPage = () => {
   useEffect(() => {
     const fetchFeaturedJobs = async () => {
       try {
-        const response = await axiosInstance.get('/jobs/');
+        const response = await api.get('/jobs/');
         setFeaturedJobs(response.data.slice(0, 3));
       } catch (err) {
         console.error("Failed to fetch featured jobs", err);

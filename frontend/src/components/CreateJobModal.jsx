@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { JOB_ENDPOINTS } from '../constants/apiConstants';
 import CompanySelect from './CompanySelect';
 import CreateCompanyModal from './CreateCompanyModal';
@@ -57,9 +57,9 @@ const CreateJobModal = ({ editJob, companies, onClose, onSuccess, onRefreshCompa
     setError('');
     try {
       if (editJob) {
-        await axiosInstance.put(JOB_ENDPOINTS.DETAIL(editJob.id), form);
+        await api.put(JOB_ENDPOINTS.DETAIL(editJob.id), form);
       } else {
-        await axiosInstance.post(JOB_ENDPOINTS.LIST, form);
+        await api.post(JOB_ENDPOINTS.LIST, form);
       }
       onSuccess();
     } catch (err) {

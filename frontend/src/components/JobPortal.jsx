@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { JOB_ENDPOINTS } from '../constants/apiConstants';
 import JobCard from './JobCard';
 import '../pages/JobList.css'; // Reusing styles
@@ -29,7 +29,7 @@ const JobPortal = () => {
         if (locationFilter) params.append('location', locationFilter);
         if (typeFilter) params.append('job_type', typeFilter);
         
-        const res = await axiosInstance.get(`${url}?${params.toString()}`);
+        const res = await api.get(`${url}?${params.toString()}`);
         setJobs(res.data);
         setFiltered(res.data);
       } catch {

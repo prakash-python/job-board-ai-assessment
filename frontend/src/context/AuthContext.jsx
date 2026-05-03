@@ -4,7 +4,7 @@
  */
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { AUTH_ENDPOINTS } from '../constants/apiConstants';
 
 const AuthContext = createContext(null);
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axiosInstance.post(AUTH_ENDPOINTS.LOGIN, { email, password });
+    const res = await api.post(AUTH_ENDPOINTS.LOGIN, { email, password });
     const { access, refresh, user: userData } = res.data;
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, phone_number) => {
-    await axiosInstance.post(AUTH_ENDPOINTS.REGISTER, { name, email, password, phone_number });
+    await api.post(AUTH_ENDPOINTS.REGISTER, { name, email, password, phone_number });
     // After registration, login is handled separately or immediately.
   };
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { COMPANY_ENDPOINTS } from '../constants/apiConstants';
 
 const CreateCompanyModal = ({ onClose, onSuccess }) => {
@@ -45,7 +45,7 @@ const CreateCompanyModal = ({ onClose, onSuccess }) => {
     }
 
     try {
-      const res = await axiosInstance.post(COMPANY_ENDPOINTS.LIST, formData, {
+      const res = await api.post(COMPANY_ENDPOINTS.LIST, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

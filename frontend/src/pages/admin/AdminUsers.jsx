@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { USER_ENDPOINTS } from '../../constants/apiConstants';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -17,7 +17,7 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axiosInstance.get(USER_ENDPOINTS.LIST);
+      const res = await api.get(USER_ENDPOINTS.LIST);
       setUsers(Array.isArray(res.data) ? res.data : []);
     } catch {
       setError('Failed to fetch users.');
@@ -47,7 +47,7 @@ const AdminUsers = () => {
     const id = confirmModal.id;
     setConfirmModal({ show: false, id: null });
     try {
-      await axiosInstance.delete(USER_ENDPOINTS.DETAIL(id));
+      await api.delete(USER_ENDPOINTS.DETAIL(id));
       setUsers(prev => prev.filter(u => u.id !== id));
     } catch (err) {
       const msg = err.response?.data?.detail || (typeof err.response?.data === 'string' && err.response?.data.includes('<!DOCTYPE') ? 'Server error occurred.' : err.response?.data) || 'Failed to delete user.';

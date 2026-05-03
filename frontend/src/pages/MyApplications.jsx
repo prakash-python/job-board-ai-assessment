@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { APPLICATION_ENDPOINTS } from '../constants/apiConstants';
 import './MyApplications.css';
 
@@ -30,7 +30,7 @@ const MyApplications = () => {
 
   const fetchApplications = async () => {
     try {
-      const res = await axiosInstance.get(APPLICATION_ENDPOINTS.LIST);
+      const res = await api.get(APPLICATION_ENDPOINTS.LIST);
       const appData = res.data.results || res.data;
       setApplications(Array.isArray(appData) ? appData : []);
     } catch {
@@ -53,7 +53,7 @@ const MyApplications = () => {
     setShowConfirm(false);
     setWithdrawing(appId);
     try {
-      await axiosInstance.delete(APPLICATION_ENDPOINTS.DETAIL(appId));
+      await api.delete(APPLICATION_ENDPOINTS.DETAIL(appId));
       setApplications((prev) => prev.filter((a) => a.id !== appId));
     } catch (err) {
       alert(err.response?.data?.detail || 'Failed to withdraw application.');

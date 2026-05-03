@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { COMPANY_ENDPOINTS, JOB_ENDPOINTS } from '../constants/apiConstants';
 import CompanyCard from '../components/CompanyCard';
 import './Companies.css';
@@ -40,7 +40,7 @@ const Companies = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const res = await axiosInstance.get(JOB_ENDPOINTS.LOCATIONS);
+        const res = await api.get(JOB_ENDPOINTS.LOCATIONS);
         setLocations(["All Locations", ...res.data]);
       } catch (err) {
         console.error("Failed to fetch locations", err);
@@ -61,7 +61,7 @@ const Companies = () => {
         if (selectedLocation !== 'All Locations') params.location = selectedLocation;
         if (selectedDate.days !== Infinity) params.date_added = selectedDate.days;
 
-        const response = await axiosInstance.get(COMPANY_ENDPOINTS.LIST, { params });
+        const response = await api.get(COMPANY_ENDPOINTS.LIST, { params });
         
         const newCompanies = response.data.results || response.data;
         const count = response.data.count || response.data.length;

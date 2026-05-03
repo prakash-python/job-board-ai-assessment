@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
 import ResumeViewerModal from '../../components/ResumeViewerModal';
 import './Profile.css';
@@ -26,7 +26,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axiosInstance.get('/accounts/profile/');
+        const res = await api.get('/accounts/profile/');
         setProfile({
           dob: res.data.dob || '',
           gender: res.data.gender || '',
@@ -72,7 +72,7 @@ const Profile = () => {
     if (resumeFile) formData.append('resume', resumeFile);
 
     try {
-      const res = await axiosInstance.put('/accounts/profile/', formData, {
+      const res = await api.put('/accounts/profile/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setMessage('Profile updated successfully!');

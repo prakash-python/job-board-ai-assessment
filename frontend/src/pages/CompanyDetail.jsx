@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { COMPANY_ENDPOINTS } from '../constants/apiConstants';
 import './CompanyDetail.css';
 
@@ -16,8 +16,8 @@ const CompanyDetail = () => {
       setLoading(true);
       try {
         const [compRes, jobsRes] = await Promise.all([
-          axiosInstance.get(COMPANY_ENDPOINTS.DETAIL(companyId)),
-          axiosInstance.get(COMPANY_ENDPOINTS.JOBS(companyId))
+          api.get(COMPANY_ENDPOINTS.DETAIL(companyId)),
+          api.get(COMPANY_ENDPOINTS.JOBS(companyId))
         ]);
         setCompany(compRes.data);
         setJobs(jobsRes.data);

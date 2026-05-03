@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { AUTH_ENDPOINTS } from '../constants/apiConstants';
 import './AuthPages.css';
 
@@ -96,7 +96,7 @@ const Register = () => {
     
     setIsCheckingUser(true);
     try {
-      const res = await axiosInstance.post(AUTH_ENDPOINTS.CHECK_EXISTS || '/accounts/check-exists/', { email, phone_number: phone });
+      const res = await api.post(AUTH_ENDPOINTS.CHECK_EXISTS || '/accounts/check-exists/', { email, phone_number: phone });
       if (res.data?.email_exists || res.data?.phone_exists) {
         setUserExistsError("Account with this email or phone already exists.");
       } else {
@@ -177,7 +177,7 @@ const Register = () => {
     setError('');
     setIsLoading(true);
     try {
-      await axiosInstance.post(AUTH_ENDPOINTS.REGISTER, {
+      await api.post(AUTH_ENDPOINTS.REGISTER, {
         email: formData.email,
         name: formData.fullName,
         phone_number: formData.phone,

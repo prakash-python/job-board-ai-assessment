@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { APPLICATION_ENDPOINTS } from '../../constants/apiConstants';
 import ResumeViewerModal from '../../components/ResumeViewerModal';
 import './Admin.css';
@@ -47,7 +47,7 @@ const AdminApplicationDetail = () => {
   useEffect(() => {
     const fetchApp = async () => {
       try {
-        const res = await axiosInstance.get(APPLICATION_ENDPOINTS.DETAIL(id));
+        const res = await api.get(APPLICATION_ENDPOINTS.DETAIL(id));
         setApp(res.data);
       } catch {
         setError('Application not found or you do not have permission to view it.');
@@ -77,7 +77,7 @@ const AdminApplicationDetail = () => {
   const handleStatusChange = async (newStatus) => {
     setUpdatingStatus(true);
     try {
-      await axiosInstance.put(APPLICATION_ENDPOINTS.DETAIL(id), { status: newStatus });
+      await api.put(APPLICATION_ENDPOINTS.DETAIL(id), { status: newStatus });
       setApp(prev => ({ ...prev, status: newStatus }));
     } catch {
       alert('Failed to update status.');

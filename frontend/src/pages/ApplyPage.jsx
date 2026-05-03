@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { JOB_ENDPOINTS, APPLICATION_ENDPOINTS } from '../constants/apiConstants';
 import { useAuth } from '../context/AuthContext';
 import './ApplyPage.css';
@@ -47,8 +47,8 @@ const ApplyPage = () => {
       try {
         // Fetch job details and profile data in parallel
         const [jobRes, profileRes] = await Promise.all([
-          axiosInstance.get(JOB_ENDPOINTS.DETAIL(id)),
-          axiosInstance.get('/accounts/profile/')
+          api.get(JOB_ENDPOINTS.DETAIL(id)),
+          api.get('/accounts/profile/')
         ]);
         
         setJob(jobRes.data);
@@ -146,7 +146,7 @@ const ApplyPage = () => {
       if (formData.portfolio_link) data.append('portfolio_link', formData.portfolio_link);
       if (resumeFile) data.append('resume', resumeFile);
 
-      await axiosInstance.post(APPLICATION_ENDPOINTS.LIST, data, {
+      await api.post(APPLICATION_ENDPOINTS.LIST, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 

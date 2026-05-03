@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axiosInstance from '../../api/axiosInstance';
+import api from '../../api/api';
 import { APPLICATION_ENDPOINTS } from '../../constants/apiConstants';
 import './Admin.css';
 
@@ -32,7 +32,7 @@ const AdminApplications = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await axiosInstance.get(APPLICATION_ENDPOINTS.LIST);
+        const res = await api.get(APPLICATION_ENDPOINTS.LIST);
         const appData = res.data.results || res.data;
         setApplications(Array.isArray(appData) ? appData : []);
       } catch {
@@ -57,7 +57,7 @@ const AdminApplications = () => {
   const handleStatusChange = async (id, newStatus) => {
     setUpdatingId(id);
     try {
-      await axiosInstance.put(APPLICATION_ENDPOINTS.DETAIL(id), { status: newStatus });
+      await api.put(APPLICATION_ENDPOINTS.DETAIL(id), { status: newStatus });
       setApplications(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
     } catch {
       alert('Failed to update status.');

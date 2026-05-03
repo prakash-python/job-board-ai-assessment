@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import api from '../api/api';
 import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../constants/apiConstants';
 import JobCard from '../components/JobCard';
 import './JobList.css';
@@ -44,7 +44,7 @@ const JobList = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const res = await axiosInstance.get(JOB_ENDPOINTS.LOCATIONS);
+        const res = await api.get(JOB_ENDPOINTS.LOCATIONS);
         setLocations(["All Locations", ...res.data]);
       } catch (err) {
         console.error("Failed to fetch locations", err);
@@ -76,7 +76,7 @@ const JobList = () => {
       if (selectedDate.value) params.date_posted = selectedDate.value;
 
       const endpoint = companyId ? COMPANY_ENDPOINTS.JOBS(companyId) : JOB_ENDPOINTS.LIST;
-      const res = await axiosInstance.get(endpoint, { params });
+      const res = await api.get(endpoint, { params });
       
       const newJobs = res.data.results || res.data;
       const count = res.data.count || res.data.length;
