@@ -25,8 +25,11 @@ class ApplicationListView(APIView):
         else:
             applications = ApplicationService.get_user_applications(request.user)
             
-        serializer = ApplicationSerializer(applications, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        from apps.jobs.views.job_views import JobPagination
+        paginator = JobPagination()
+        paginated_applications = paginator.paginate_queryset(applications, request)
+        serializer = ApplicationSerializer(paginated_applications, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         self.check_object_permissions(request, None)
@@ -46,7 +49,7 @@ class ApplicationListView(APIView):
             portfolio_link=serializer.validated_data.get('portfolio_link'),
             resume=serializer.validated_data.get('resume')
         )
-        return Response(ApplicationSerializer(application).data, status=status.HTTP_201_CREATED)
+        return Response(ApplicationSerializer(application, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class ApplicationDetailView(APIView):

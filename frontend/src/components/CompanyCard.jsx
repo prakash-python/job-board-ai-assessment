@@ -1,17 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getLogoUrl, getAvatarColor } from '../utils/formatters';
 
 const CompanyCard = ({ company }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const logoUrl = getLogoUrl(company.logo);
 
   return (
     <div className={`company-card ${isExpanded ? 'expanded' : ''}`}>
       <div className="company-card-header">
-        <div className="company-logo" style={{ background: '#ffffff', overflow: 'hidden', padding: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          {company.logo && (company.logo.startsWith('http') || company.logo.startsWith('/')) ? (
-            <img src={company.logo} alt={`${company.name} logo`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        <div className="company-logo" style={{ background: imgError || !logoUrl ? getAvatarColor(company.name) : '#ffffff', overflow: 'hidden', padding: '6px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.5rem', color: '#fff' }}>
+          {logoUrl && !imgError ? (
+            <img 
+              src={logoUrl} 
+              alt={`${company.name} logo`} 
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+              onError={() => setImgError(true)} 
+            />
           ) : (
-            company.logo || company.name.charAt(0).toUpperCase()
+            company.name.charAt(0).toUpperCase()
           )}
         </div>
         <div className="company-title-info">

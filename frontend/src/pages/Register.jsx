@@ -125,6 +125,12 @@ const Register = () => {
       const newData = { ...prev, [name]: newValue };
       const errorMsg = validateField(name, newValue, newData);
       setFormErrors(errors => ({ ...errors, [name]: errorMsg }));
+      
+      // Clear global user exists error when user modifies email or phone
+      if (name === 'email' || name === 'phone') {
+        setUserExistsError('');
+      }
+      
       return newData;
     });
   };
@@ -181,16 +187,24 @@ const Register = () => {
       navigate('/signin');
     } catch (err) {
       const errorData = err.response?.data;
-      if (typeof errorData === 'string') {
-        setError(errorData);
-      } else if (errorData?.detail) {
-        setError(errorData.detail);
-      } else if (typeof errorData === 'object') {
-        // Handle field-specific errors flattened
-        const firstError = Object.values(errorData)[0];
-        setError(Array.isArray(firstError) ? firstError[0] : firstError);
+      if (typeof errorData === 'object' && !Array.isArray(errorData)) {
+        // Map backend field errors to formErrors
+        const newErrors = { ...formErrors };
+        let generalError = '';
+
+        Object.keys(errorData).forEach(field => {
+          const msg = Array.isArray(errorData[field]) ? errorData[field][0] : errorData[field];
+          if (field === 'email') newErrors.email = msg;
+          else if (field === 'phone_number') newErrors.phone = msg;
+          else if (field === 'name') newErrors.fullName = msg;
+          else if (field === 'password') newErrors.password = msg;
+          else generalError = msg;
+        });
+
+        setFormErrors(newErrors);
+        if (generalError) setError(generalError);
       } else {
-        setError('Registration failed. Please check your details and try again.');
+        setError(errorData?.detail || errorData || 'Registration failed. Please try again.');
       }
     } finally {
       setIsLoading(false);

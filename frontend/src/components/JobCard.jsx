@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getLogoUrl, getAvatarColor } from '../utils/formatters';
 import './JobCard.css';
 
 const JobCard = ({ job }) => {
-  const companyName = job.company_name || 'Unknown Company';
-  const companyInitial = companyName.charAt(0).toUpperCase();
+  const [imgError, setImgError] = useState(false);
+  const companyName = job.company?.name || job.company_name || 'Unknown Company';
+  const logoUrl = getLogoUrl(job.company?.logo);
   
   // Calculate relative time
   const daysAgo = Math.floor((new Date() - new Date(job.created_at)) / (1000 * 60 * 60 * 24));
@@ -20,9 +23,21 @@ const JobCard = ({ job }) => {
   return (
     <div className="job-card-premium fade-in">
       <div className="job-card-header">
-        <div className={`company-logo initial-${companyInitial.toLowerCase()}`}>
-          {companyInitial}
-        </div>
+        {logoUrl && !imgError ? (
+          <img 
+            src={logoUrl} 
+            alt={companyName} 
+            className="company-logo-img" 
+            onError={() => setImgError(true)} 
+          />
+        ) : (
+          <div 
+            className="company-logo-fallback" 
+            style={{ backgroundColor: getAvatarColor(companyName) }}
+          >
+            {companyName.charAt(0).toUpperCase()}
+          </div>
+        )}
         <span className="job-post-time">{timeText}</span>
       </div>
 

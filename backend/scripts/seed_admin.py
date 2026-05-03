@@ -41,7 +41,6 @@ def seed_admin():
         return
 
     user = User.objects.create_superuser(
-        username=email,
         email=email,
         password=password,
         name=name,

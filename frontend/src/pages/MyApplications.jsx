@@ -31,7 +31,8 @@ const MyApplications = () => {
   const fetchApplications = async () => {
     try {
       const res = await axiosInstance.get(APPLICATION_ENDPOINTS.LIST);
-      setApplications(res.data);
+      const appData = res.data.results || res.data;
+      setApplications(Array.isArray(appData) ? appData : []);
     } catch {
       setError('Failed to load your applications.');
     } finally {

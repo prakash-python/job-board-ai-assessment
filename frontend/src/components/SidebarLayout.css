@@ -234,6 +234,12 @@
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 32px 24px; /* Added top and side padding */
+}
+
+.sidebar-content-inner {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */

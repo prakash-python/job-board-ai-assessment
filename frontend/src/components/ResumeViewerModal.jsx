@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axiosInstance from '../api/axiosInstance';
 
 const ResumeViewerModal = ({ fileUrl, userName = "Candidate", onClose }) => {
@@ -36,7 +37,7 @@ const ResumeViewerModal = ({ fileUrl, userName = "Candidate", onClose }) => {
     return () => { if (url) window.URL.revokeObjectURL(url); };
   }, [fileUrl]);
 
-  return (
+  return createPortal(
     <div className="resume-modal-overlay" onClick={onClose}>
       <div className="resume-modal-container" onClick={e => e.stopPropagation()}>
         <div className="resume-modal-header">
@@ -71,7 +72,8 @@ const ResumeViewerModal = ({ fileUrl, userName = "Candidate", onClose }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

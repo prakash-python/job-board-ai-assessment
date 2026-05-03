@@ -28,6 +28,9 @@ const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -53,7 +56,9 @@ const JobList = () => {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = {
+        page: currentPage,
+      };
       if (searchTerm) params.search = searchTerm;
       if (selectedType !== 'All Types') {
          const typeMap = {
@@ -72,7 +77,17 @@ const JobList = () => {
 
       const endpoint = companyId ? COMPANY_ENDPOINTS.JOBS(companyId) : JOB_ENDPOINTS.LIST;
       const res = await axiosInstance.get(endpoint, { params });
-      setJobs(res.data);
+      
+      const newJobs = res.data.results || res.data;
+      const count = res.data.count || res.data.length;
+
+      if (currentPage === 1) {
+        setJobs(newJobs);
+      } else {
+        setJobs(prev => [...prev, ...newJobs]);
+      }
+      
+      setTotalCount(count);
       setError('');
     } catch (err) {
       console.error(err);
@@ -84,7 +99,12 @@ const JobList = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [companyId, searchTerm, selectedType, selectedLocation, selectedSalary, selectedDate]);
+  }, [companyId, searchTerm, selectedType, selectedLocation, selectedSalary, selectedDate, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedType, selectedLocation, selectedSalary, selectedDate]);
 
   const handleClearFilters = () => {
     setSearchTerm('');
@@ -133,14 +153,14 @@ const JobList = () => {
       </div>
 
       <div className="jobs-results-header">
-        <p>Showing {jobs.length} jobs</p>
+        <p>Showing {jobs.length} of {totalCount} jobs</p>
       </div>
 
-      {loading ? (
+      {loading && currentPage === 1 ? (
         <div className="jobs-grid">
           {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="skeleton" style={{height: '320px', borderRadius: '16px'}}></div>)}
         </div>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && !loading ? (
         <div className="empty-state">
           <span className="empty-icon">🔎</span>
           <h3>No jobs found</h3>
@@ -148,11 +168,25 @@ const JobList = () => {
           <button className="btn btn-primary mt-3" style={{display: 'inline-block', marginTop: '16px'}} onClick={handleClearFilters}>Clear Filters</button>
         </div>
       ) : (
-        <div className="jobs-grid">
-          {jobs.map(job => (
-            <JobCard key={job.id} job={job} />
-          ))}
-        </div>
+        <>
+          <div className="jobs-grid">
+            {jobs.map(job => (
+              <JobCard key={job.id} job={job} />
+            ))}
+          </div>
+
+          {totalCount > jobs.length && (
+            <div className="load-more-container">
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Load More Jobs'}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

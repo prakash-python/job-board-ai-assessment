@@ -51,7 +51,6 @@ class UserService:
             raise ValidationError({'phone_number': 'A user with this phone number already exists.'})
 
         user = User.objects.create_user(
-            username=email,  # username kept same as email
             email=email,
             name=name,
             password=password,
@@ -125,7 +124,6 @@ class UserService:
             raise ValidationError({'email': 'A user with this email already exists.'})
 
         user = User.objects.create_user(
-            username=email,
             email=email,
             name=name,
             password=password,

@@ -371,7 +371,32 @@
 }
 .status-select-modern:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.status-select-modern option {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  padding: 10px;
+}
+
+.status-updating-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
 }
 
 .app-row-actions { display: flex; gap: 6px; }

@@ -26,7 +26,7 @@ class ApplicationService:
         return Application.objects.all().order_by('-created_at')
 
     @staticmethod
-    def get_application_by_id(app_id: int) -> Application:
+    def get_application_by_id(app_id) -> Application:
         try:
             return Application.objects.get(id=app_id)
         except ObjectDoesNotExist:
@@ -82,14 +82,14 @@ class ApplicationService:
         return application
 
     @staticmethod
-    def update_application_status(app_id: int, status: str, user) -> Application:
+    def update_application_status(app_id, status: str, user) -> Application:
         """Update the status of an application (ADMIN only)."""
         if not user.is_admin:
             raise PermissionDenied('Only admins can update application status.')
 
         application = ApplicationService.get_application_by_id(app_id)
         
-        if status not in dict(Application.STATUS_CHOICES):
+        if status not in dict(Application.Status.choices):
             raise ValidationError('Invalid status provided.')
 
         old_status = application.status
@@ -139,14 +139,15 @@ class ApplicationService:
     @staticmethod
     def _send_status_update_email(application: Application):
         """Send email to customer when application status changes."""
-        status_text = "Accepted" if application.status == 'ACCEPTED' else "Rejected"
-        subject = f"Application Update: {application.job.title} at {application.job.company}"
+        status_display = application.get_status_display()
+        subject = f"Application Update: {application.job.title} at {application.job.company.name}"
         message = (
             f"Hi {application.user.name},\n\n"
-            f"There is an update regarding your application for the {application.job.title} position at {application.job.company}.\n\n"
-            f"Your application status has been changed to: {status_text}.\n\n"
+            f"There is an update regarding your application for the {application.job.title} position at {application.job.company.name}.\n\n"
+            f"Your application status has been updated to: {status_display}.\n\n"
+            f"You can log in to your dashboard to view more details.\n\n"
             f"Best regards,\n"
-            f"The Job Board Team"
+            f"The Hireloop Team"
         )
         try:
             send_mail(

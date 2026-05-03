@@ -27,14 +27,14 @@ const Companies = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState('All Industries');
   const [selectedLocation, setSelectedLocation] = useState('All Locations');
   const [selectedSalary, setSelectedSalary] = useState(SALARY_RANGES[0]);
   const [selectedDate, setSelectedDate] = useState(DATE_RANGES[0]);
-  
-  const [visibleCount, setVisibleCount] = useState(6);
   const [locations, setLocations] = useState(["All Locations"]);
 
   useEffect(() => {
@@ -53,14 +53,25 @@ const Companies = () => {
     const fetchCompanies = async () => {
       setLoading(true);
       try {
-        const params = {};
+        const params = {
+          page: currentPage
+        };
         if (searchTerm) params.search = searchTerm;
         if (selectedIndustry !== 'All Industries') params.industry = selectedIndustry;
         if (selectedLocation !== 'All Locations') params.location = selectedLocation;
         if (selectedDate.days !== Infinity) params.date_added = selectedDate.days;
 
         const response = await axiosInstance.get(COMPANY_ENDPOINTS.LIST, { params });
-        setCompanies(response.data);
+        
+        const newCompanies = response.data.results || response.data;
+        const count = response.data.count || response.data.length;
+
+        if (currentPage === 1) {
+          setCompanies(newCompanies);
+        } else {
+          setCompanies(prev => [...prev, ...newCompanies]);
+        }
+        setTotalCount(count);
       } catch (err) {
         setError(err.response?.data?.detail || err.message);
       } finally {
@@ -68,12 +79,15 @@ const Companies = () => {
       }
     };
     fetchCompanies();
-  }, [searchTerm, selectedIndustry, selectedLocation, selectedDate]);
+  }, [searchTerm, selectedIndustry, selectedLocation, selectedDate, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedIndustry, selectedLocation, selectedSalary, selectedDate]);
 
   const filteredCompanies = companies;
-
-  const displayedCompanies = filteredCompanies.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredCompanies.length;
+  const hasMore = totalCount > companies.length;
 
   const handleClearFilters = () => {
     setSearchTerm('');
@@ -127,7 +141,11 @@ const Companies = () => {
       </div>
 
       {/* Grid */}
-      {filteredCompanies.length === 0 ? (
+      {loading && currentPage === 1 ? (
+        <div className="companies-grid">
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="skeleton" style={{height: '320px', borderRadius: '16px'}}></div>)}
+        </div>
+      ) : filteredCompanies.length === 0 && !loading ? (
         <div className="empty-state">
           <span className="empty-icon">🏢</span>
           <h3>No companies found</h3>
@@ -137,15 +155,19 @@ const Companies = () => {
       ) : (
         <>
           <div className="companies-grid">
-            {displayedCompanies.map(company => (
+            {filteredCompanies.map(company => (
               <CompanyCard key={company.id} company={company} />
             ))}
           </div>
           
           {hasMore && (
             <div className="load-more-container text-center" style={{marginTop: '40px', display: 'flex', justifyContent: 'center'}}>
-              <button className="btn btn-secondary btn-lg" onClick={() => setVisibleCount(prev => prev + 6)}>
-                Load More Companies
+              <button 
+                className="btn btn-secondary btn-lg" 
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Load More Companies'}
               </button>
             </div>
           )}

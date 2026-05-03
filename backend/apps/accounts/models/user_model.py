@@ -4,12 +4,30 @@ Extends AbstractUser to support role-based access (ADMIN, CUSTOMER).
 """
 
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, name, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'ADMIN')
+
+        return self.create_user(email, name, password, **extra_fields)
 
 
-class User(AbstractUser):
+class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model.
     - email is the unique identifier (used for login)
@@ -21,10 +39,6 @@ class User(AbstractUser):
         ADMIN = 'ADMIN', 'Admin'
         CUSTOMER = 'CUSTOMER', 'Customer'
 
-    # Remove username uniqueness constraint (we use email instead)
-    username = models.CharField(max_length=150, blank=True)
-
-    # Required fields
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     name = models.CharField(max_length=255)
@@ -37,6 +51,9 @@ class User(AbstractUser):
     # Status fields
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    objects = UserManager()
 
     # Use email as the login field
     USERNAME_FIELD = 'email'

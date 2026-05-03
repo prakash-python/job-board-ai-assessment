@@ -18,9 +18,14 @@ const AdminDashboard = () => {
           axiosInstance.get(JOB_ENDPOINTS.LIST),
           axiosInstance.get(APPLICATION_ENDPOINTS.LIST),
         ]);
-        const users = Array.isArray(usersRes.data) ? usersRes.data : [];
-        const jobs = Array.isArray(jobsRes.data) ? jobsRes.data : [];
-        const apps = Array.isArray(appsRes.data) ? appsRes.data : [];
+        const usersResData = usersRes.data.results || usersRes.data;
+        const jobsResData = jobsRes.data.results || jobsRes.data;
+        const appsResData = appsRes.data.results || appsRes.data;
+
+        const users = Array.isArray(usersResData) ? usersResData : [];
+        const jobs = Array.isArray(jobsResData) ? jobsResData : [];
+        const apps = Array.isArray(appsResData) ? appsResData : [];
+
         setStats({ users: users.length, jobs: jobs.length, applications: apps.length });
         setRecentJobs(jobs.slice(0, 5));
         setRecentApps(apps.slice(0, 5));

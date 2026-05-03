@@ -23,7 +23,6 @@ class Command(BaseCommand):
         if not admin_user:
             self.stdout.write(self.style.WARNING('No ADMIN user found. Creating a default admin...'))
             admin_user = User.objects.create_superuser(
-                username='admin',
                 email='admin@hireloop.in',
                 password='Admin@12345',
                 name='Hireloop Admin',

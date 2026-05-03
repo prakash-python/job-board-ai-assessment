@@ -6,10 +6,18 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.pagination import PageNumberPagination
 
 from apps.jobs.serializers import JobSerializer, JobCreateUpdateSerializer, CompanySerializer
 from apps.jobs.services import JobService, CompanyService
 from apps.accounts.permissions import IsAdminRole
+
+
+class JobPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class JobListCreateView(APIView):
@@ -31,8 +39,11 @@ class JobListCreateView(APIView):
             filters[key] = value
 
         jobs = JobService.get_all_jobs(filters=filters)
-        serializer = JobSerializer(jobs, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        paginator = JobPagination()
+        paginated_jobs = paginator.paginate_queryset(jobs, request)
+        serializer = JobSerializer(paginated_jobs, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = JobCreateUpdateSerializer(data=request.data)
@@ -86,6 +97,8 @@ class CompanyListCreateView(APIView):
     GET  /api/jobs/companies/ — List all companies
     POST /api/jobs/companies/ — Create a new company (ADMIN only)
     """
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
@@ -97,14 +110,17 @@ class CompanyListCreateView(APIView):
             filters[key] = value
         
         companies = CompanyService.get_all_companies(filters=filters)
-        serializer = CompanySerializer(companies, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        paginator = JobPagination()
+        paginated_companies = paginator.paginate_queryset(companies, request)
+        serializer = CompanySerializer(paginated_companies, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
-        serializer = CompanySerializer(data=request.data)
+        serializer = CompanySerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         company = CompanyService.create_company(serializer.validated_data, request.user)
-        return Response(CompanySerializer(company).data, status=status.HTTP_201_CREATED)
+        return Response(CompanySerializer(company, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 class CompanyDetailView(APIView):
     """
@@ -112,6 +128,8 @@ class CompanyDetailView(APIView):
     PUT    /api/jobs/companies/<id>/ — Update company (ADMIN only)
     DELETE /api/jobs/companies/<id>/ — Delete company (ADMIN only)
     """
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
@@ -119,14 +137,14 @@ class CompanyDetailView(APIView):
 
     def get(self, request, company_id):
         company = CompanyService.get_company_by_id(company_id)
-        serializer = CompanySerializer(company)
+        serializer = CompanySerializer(company, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, company_id):
-        serializer = CompanySerializer(data=request.data, partial=True)
+        serializer = CompanySerializer(data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         company = CompanyService.update_company(company_id, serializer.validated_data, request.user)
-        return Response(CompanySerializer(company).data, status=status.HTTP_200_OK)
+        return Response(CompanySerializer(company, context={'request': request}).data, status=status.HTTP_200_OK)
 
     def delete(self, request, company_id):
         CompanyService.delete_company(company_id, request.user)

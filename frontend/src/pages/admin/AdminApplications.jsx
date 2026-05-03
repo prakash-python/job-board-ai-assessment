@@ -27,12 +27,14 @@ const AdminApplications = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         const res = await axiosInstance.get(APPLICATION_ENDPOINTS.LIST);
-        setApplications(Array.isArray(res.data) ? res.data : []);
+        const appData = res.data.results || res.data;
+        setApplications(Array.isArray(appData) ? appData : []);
       } catch {
         setError('Failed to fetch applications.');
       } finally {
@@ -53,11 +55,14 @@ const AdminApplications = () => {
   });
 
   const handleStatusChange = async (id, newStatus) => {
+    setUpdatingId(id);
     try {
       await axiosInstance.put(APPLICATION_ENDPOINTS.DETAIL(id), { status: newStatus });
       setApplications(prev => prev.map(a => a.id === id ? { ...a, status: newStatus } : a));
     } catch {
       alert('Failed to update status.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -127,15 +132,21 @@ const AdminApplications = () => {
 
                 {/* Right — Actions */}
                 <div className="app-actions">
-                  <select
-                    className="status-select-modern"
-                    value={app.status}
-                    onChange={e => handleStatusChange(app.id, e.target.value)}
-                  >
-                    {STATUS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <select
+                      className="status-select-modern"
+                      value={app.status}
+                      onChange={e => handleStatusChange(app.id, e.target.value)}
+                      disabled={updatingId === app.id}
+                    >
+                      {STATUS_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    {updatingId === app.id && (
+                      <div className="status-updating-spinner" />
+                    )}
+                  </div>
                   <div className="app-row-actions">
                     <Link
                       to={`/admin/applications/${app.id}`}

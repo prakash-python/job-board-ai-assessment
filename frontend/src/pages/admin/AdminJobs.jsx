@@ -2,12 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { JOB_ENDPOINTS, COMPANY_ENDPOINTS } from '../../constants/apiConstants';
+import CreateJobModal from '../../components/CreateJobModal';
 import './Admin.css';
-
-const EMPTY_FORM = {
-  title: '', company: '', location: '', job_type: 'full-time',
-  description: '', salary_min: '', salary_max: '', deadline: '', is_active: true,
-};
 
 const AdminJobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -16,71 +12,68 @@ const AdminJobs = () => {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editJob, setEditJob] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
-  const fetchData = async () => {
+  const fetchJobs = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     try {
-      const [jobsRes, companiesRes] = await Promise.all([
-        axiosInstance.get(JOB_ENDPOINTS.LIST),
-        axiosInstance.get(COMPANY_ENDPOINTS.LIST),
-      ]);
-      setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
-      setCompanies(Array.isArray(companiesRes.data) ? companiesRes.data : []);
+      const params = { page: currentPage };
+      if (search) params.search = search;
+      if (filterStatus !== 'all') params.is_active = filterStatus === 'active';
+
+      const res = await axiosInstance.get(JOB_ENDPOINTS.LIST, { params });
+      const jobsData = res.data.results || res.data;
+      setJobs(Array.isArray(jobsData) ? jobsData : []);
+      setTotalCount(res.data.count || (Array.isArray(res.data) ? res.data.length : 0));
     } catch {
-      setError('Failed to load data.');
+      setError('Failed to load jobs.');
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const fetchCompanies = async () => {
+    try {
+      const res = await axiosInstance.get(COMPANY_ENDPOINTS.LIST);
+      const companiesData = res.data.results || res.data;
+      setCompanies(Array.isArray(companiesData) ? companiesData : []);
+    } catch {
+      console.error('Failed to load companies.');
+    }
+  };
 
-  const filteredJobs = jobs.filter(job => {
-    const matchSearch = !search || job.title?.toLowerCase().includes(search.toLowerCase()) ||
-      job.company?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && job.is_active) ||
-      (filterStatus === 'closed' && !job.is_active);
-    return matchSearch && matchStatus;
-  });
+  useEffect(() => {
+    const initFetch = async () => {
+      setLoading(true);
+      await Promise.all([fetchJobs(), fetchCompanies()]);
+      setLoading(false);
+    };
+    initFetch();
+  }, []);
 
-  const openCreate = () => { setEditJob(null); setForm(EMPTY_FORM); setShowModal(true); };
+  useEffect(() => {
+    // Only fetch jobs on dependency change, but don't show global loading
+    fetchJobs();
+  }, [currentPage, search, filterStatus]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterStatus]);
+
+  const openCreate = () => { setEditJob(null); setShowModal(true); };
   const openEdit = (job) => {
     setEditJob(job);
-    setForm({
-      title: job.title || '', company: job.company?.id || '',
-      location: job.location || '', job_type: job.job_type || 'full-time',
-      description: job.description || '', salary_min: job.salary_min || '',
-      salary_max: job.salary_max || '', deadline: job.deadline || '',
-      is_active: job.is_active,
-    });
     setShowModal(true);
   };
 
-  const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      if (editJob) {
-        await axiosInstance.put(JOB_ENDPOINTS.DETAIL(editJob.id), form);
-      } else {
-        await axiosInstance.post(JOB_ENDPOINTS.LIST, form);
-      }
-      setShowModal(false);
-      fetchData();
-    } catch {
-      alert('Failed to save. Check all required fields.');
-    } finally {
-      setSaving(false);
-    }
+  const handleSaveSuccess = () => {
+    setShowModal(false);
+    fetchJobs();
   };
 
   const handleDelete = async (id) => {
@@ -138,7 +131,7 @@ const AdminJobs = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredJobs.map(job => (
+              {jobs.map(job => (
                 <tr key={job.id}>
                   <td>
                     <div className="job-title-cell">
@@ -177,7 +170,7 @@ const AdminJobs = () => {
                   </td>
                 </tr>
               ))}
-              {filteredJobs.length === 0 && (
+              {jobs.length === 0 && (
                 <tr>
                   <td colSpan="6">
                     <div className="empty-state">
@@ -192,77 +185,38 @@ const AdminJobs = () => {
         </div>
       </div>
 
+      {/* Pagination */}
+      {totalCount > pageSize && (
+        <div className="pagination-container" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
+          <button 
+            className="btn btn-ghost" 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          >
+            ← Previous
+          </button>
+          <span style={{ color: 'white', fontWeight: 600 }}>
+            Page {currentPage} of {Math.ceil(totalCount / pageSize)}
+          </span>
+          <button 
+            className="btn btn-ghost" 
+            disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-container" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>{editJob ? '✏️ Edit Job Posting' : '+ Create New Job'}</h3>
-              <button className="close-modal-btn" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSave} className="modal-body">
-              <div className="form-row">
-                <div className="form-group-modern">
-                  <label>Job Title <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input type="text" name="title" value={form.title} onChange={handleFormChange} required placeholder="e.g. Senior React Developer" />
-                </div>
-                <div className="form-group-modern">
-                  <label>Company <span style={{ color: '#ef4444' }}>*</span></label>
-                  <select name="company" value={form.company} onChange={handleFormChange} required>
-                    <option value="">Select Company</option>
-                    {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group-modern">
-                  <label>Location <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input type="text" name="location" value={form.location} onChange={handleFormChange} required placeholder="e.g. Hyderabad, India" />
-                </div>
-                <div className="form-group-modern">
-                  <label>Job Type</label>
-                  <select name="job_type" value={form.job_type} onChange={handleFormChange}>
-                    <option value="full-time">Full Time</option>
-                    <option value="part-time">Part Time</option>
-                    <option value="contract">Contract</option>
-                    <option value="remote">Remote</option>
-                    <option value="internship">Internship</option>
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group-modern">
-                  <label>Min Salary (₹)</label>
-                  <input type="number" name="salary_min" value={form.salary_min} onChange={handleFormChange} placeholder="e.g. 500000" />
-                </div>
-                <div className="form-group-modern">
-                  <label>Max Salary (₹)</label>
-                  <input type="number" name="salary_max" value={form.salary_max} onChange={handleFormChange} placeholder="e.g. 1200000" />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group-modern">
-                  <label>Application Deadline</label>
-                  <input type="date" name="deadline" value={form.deadline} onChange={handleFormChange} />
-                </div>
-                <div className="form-group-modern" style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '28px' }}>
-                  <input type="checkbox" id="is_active" name="is_active" checked={form.is_active} onChange={handleFormChange} style={{ width: 'auto', accentColor: '#6366f1' }} />
-                  <label htmlFor="is_active" style={{ marginBottom: 0, cursor: 'pointer' }}>Publish job listing</label>
-                </div>
-              </div>
-              <div className="form-group-modern">
-                <label>Job Description <span style={{ color: '#ef4444' }}>*</span></label>
-                <textarea name="description" value={form.description} onChange={handleFormChange} rows="5" required placeholder="Describe the role, responsibilities, and requirements..." />
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : editJob ? 'Update Job' : 'Create Job'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CreateJobModal 
+          editJob={editJob}
+          companies={companies}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleSaveSuccess}
+          onRefreshCompanies={fetchCompanies}
+        />
       )}
     </div>
   );
