@@ -26,11 +26,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      // Clear tokens and redirect to login
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // No automatic page reload - allow component-level error handling
     }
     return Promise.reject(error);
   }

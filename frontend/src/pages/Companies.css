@@ -92,7 +92,7 @@
   color: var(--color-text-secondary);
   font-size: 0.9rem;
   font-weight: 600;
-  margin-top: -8px;
+  margin: 12px 0 20px 0; /* Add gaps above and below */
 }
 
 /* Grid & Cards */
